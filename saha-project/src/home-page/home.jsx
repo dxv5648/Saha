@@ -1,0 +1,25 @@
+import About from "./about.jsx";
+import Footer from "./Footer.jsx";
+import Header from "./Header.jsx";
+import skyline from "../assets/Auckland-Skyline-Dark.jpg";
+
+
+
+export default function Home() {
+    return (
+        <div className="bg-black min-h-screen min-w-screen flex flex-col">
+            <Header />
+            <Body />
+            <Footer className="mt-auto" />
+        </div>
+    );
+}
+
+function Body() {
+    return (
+        <div className="w-full">
+            <img src={skyline} alt="Auckland skyline" className="w-full opacity-50" />
+            <About />
+        </div>
+    );
+}
