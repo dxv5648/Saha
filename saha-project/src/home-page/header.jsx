@@ -1,5 +1,3 @@
-
-
 export default function Header() {
   return (
     <div className="bg-[#0F0F0F] text-white w-full py-4">
