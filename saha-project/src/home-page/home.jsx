@@ -21,7 +21,7 @@ function Body() {
       <img
         src={skyline}
         alt="Auckland skyline"
-        className="w-full opacity-50 absolute inset-0"
+        className="w-full opacity-60 absolute inset-0"
       />
       <div className="relative z-10">
         <AI />
