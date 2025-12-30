@@ -5,6 +5,7 @@ import AI from "./ai-search.jsx";
 import ServiceOverview from "./service-overview.jsx";
 import Contact from "./contact.jsx";
 import skyline from "../assets/Auckland-Skyline-Dark.jpg";
+
 //import Login from "../login.jsx"
 
 export default function Home() {
@@ -29,7 +30,6 @@ function Body() {
         <AI />
         <About />
         <ServiceOverview />
-        <Contact />
       </div>
     </div>
   );
