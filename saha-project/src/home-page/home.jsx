@@ -2,6 +2,8 @@ import About from "./about.jsx";
 import Footer from "./Footer.jsx";
 import Header from "./Header.jsx";
 import AI from "./ai-search.jsx";
+import ServiceOverview from "./service-overview.jsx";
+import Contact from "./contact.jsx";
 import skyline from "../assets/Auckland-Skyline-Dark.jpg";
 //import Login from "../login.jsx"
 
@@ -26,6 +28,8 @@ function Body() {
       <div className="relative z-10">
         <AI />
         <About />
+        <ServiceOverview />
+        <Contact />
       </div>
     </div>
   );
