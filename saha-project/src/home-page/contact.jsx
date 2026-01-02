@@ -31,11 +31,6 @@ export default function Contact() {
           <div className="flex flex-col items-start w-full gap-8">
             {/* Address */}
             <div className="flex items-start gap-4">
-              <img
-                src="https://storage.googleapis.com/tagjs-prod.appspot.com/v1/L7hCOf5rCg/0mre9l5y_expires_30_days.png"
-                alt="Address icon"
-                className="w-5 h-8 object-contain flex-shrink-0"
-              />
               <div className="flex flex-col gap-3">
                 <span className="text-white text-lg font-bold">Address</span>
                 <span className="text-gray-300 text-base leading-relaxed">
@@ -50,11 +45,6 @@ export default function Contact() {
 
             {/* Email */}
             <div className="flex items-start gap-4">
-              <img
-                src="https://storage.googleapis.com/tagjs-prod.appspot.com/v1/L7hCOf5rCg/va6qjuk4_expires_30_days.png"
-                alt="Email icon"
-                className="w-6 h-8 object-contain flex-shrink-0"
-              />
               <div className="flex flex-col gap-3">
                 <span className="text-white text-lg font-bold">Email</span>
                 <div className="text-gray-300 text-base">
@@ -76,11 +66,6 @@ export default function Contact() {
 
             {/* Phone */}
             <div className="flex items-start gap-4">
-              <img
-                src="https://storage.googleapis.com/tagjs-prod.appspot.com/v1/L7hCOf5rCg/v9se0alc_expires_30_days.png"
-                alt="Phone icon"
-                className="w-6 h-8 object-contain flex-shrink-0"
-              />
               <div className="flex flex-col gap-3">
                 <span className="text-white text-lg font-bold">Phone</span>
                 <a
