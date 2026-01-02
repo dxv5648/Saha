@@ -1,83 +1,112 @@
+import { Link } from "react-router-dom";
+
 export default function ServiceOverview() {
   return (
-    <div className="flex flex-col items-center mb-[132px]">
-      <span className="text-white text-3xl font-bold mb-[72px]">
+    <div className="flex flex-col items-center mb-[132px] w-full px-[10vw]">
+      <span
+        className="text-white font-bold mb-[72px]"
+        style={{ fontSize: "clamp(1.5rem, 4vw, 1.875rem)" }}
+      >
         {"Services"}
       </span>
-      <div className="grid grid-cols-3 mb-[50px] gap-[58px]">
-        <button
-          className="flex flex-col items-center bg-[#121212B0] text-left w-[345px] py-[68px] px-[65px] gap-[18px] rounded-[20px] border-0"
-          onClick={() => alert("Pressed!")}
+      <div
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 w-full max-w-[1200px]"
+        style={{
+          gap: "clamp(30px, 5vw, 58px)",
+          marginBottom: "clamp(30px, 4vw, 50px)",
+        }}
+      >
+        <Link
+          //href="/services/home"
+          className="flex flex-col items-center bg-[#121212B0] text-left rounded-[20px] border-0 cursor-pointer hover:bg-[#1a1a1a] transition-colors"
+          style={{
+            padding: "clamp(40px, 6vw, 68px) clamp(30px, 5vw, 65px)",
+            gap: "clamp(12px, 2vw, 18px)",
+          }}
         >
-          <img
-            src={
-              "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/L7hCOf5rCg/6stvzqdh_expires_30_days.png"
-            }
-            className="w-10 h-9 object-fill"
-          />
-          <span className="text-white text-3xl">{"Home Services"}</span>
-        </button>
-        <button
-          className="flex flex-col items-center bg-[#121212B0] text-left w-[345px] py-[68px] px-[21px] gap-[21px] rounded-[20px] border-0"
-          onClick={() => alert("Pressed!")}
+          <span
+            className="text-white whitespace-nowrap overflow-hidden text-ellipsis w-full text-center"
+            style={{ fontSize: "clamp(0.875rem, 2.5vw, 1.875rem)" }}
+          >
+            {"Home Services"}
+          </span>
+        </Link>
+        <Link
+          //href="/services/professional"
+          className="flex flex-col items-center bg-[#121212B0] text-left rounded-[20px] border-0 cursor-pointer hover:bg-[#1a1a1a] transition-colors"
+          style={{
+            padding: "clamp(40px, 6vw, 68px) clamp(15px, 2vw, 21px)",
+            gap: "clamp(14px, 2vw, 21px)",
+          }}
         >
-          <img
-            src={
-              "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/L7hCOf5rCg/xmydqrk2_expires_30_days.png"
-            }
-            className="w-9 h-[33px] object-fill"
-          />
-          <span className="text-white text-3xl">{"Professional Services"}</span>
-        </button>
-        <button
-          className="flex flex-col items-center bg-[#121212B0] text-left w-[345px] py-[68px] px-[49px] gap-[18px] rounded-[20px] border-0"
-          onClick={() => alert("Pressed!")}
+          <span
+            className="text-white whitespace-nowrap overflow-hidden text-ellipsis w-full text-center"
+            style={{ fontSize: "clamp(0.875rem, 2.5vw, 1.875rem)" }}
+          >
+            {"Professional Services"}
+          </span>
+        </Link>
+        <Link
+          //href="/services/creative"
+          className="flex flex-col items-center bg-[#121212B0] text-left rounded-[20px] border-0 cursor-pointer hover:bg-[#1a1a1a] transition-colors"
+          style={{
+            padding: "clamp(40px, 6vw, 68px) clamp(30px, 4vw, 49px)",
+            gap: "clamp(12px, 2vw, 18px)",
+          }}
         >
-          <img
-            src={
-              "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/L7hCOf5rCg/b6rag6df_expires_30_days.png"
-            }
-            className="w-[38px] h-9 object-fill"
-          />
-          <span className="text-white text-3xl">{"Creative Services"}</span>
-        </button>
+          <span
+            className="text-white whitespace-nowrap"
+            style={{ fontSize: "clamp(1.25rem, 3vw, 1.875rem)" }}
+          >
+            {"Creative Services"}
+          </span>
+        </Link>
 
-        <button
-          className="flex flex-col items-center bg-[#121212B0] text-left w-[345px] py-[68px] px-[65px] gap-[18px] rounded-[20px] border-0"
-          onClick={() => alert("Pressed!")}
+        <Link
+          //href="/services/home"
+          className="flex flex-col items-center bg-[#121212B0] text-left rounded-[20px] border-0 cursor-pointer hover:bg-[#1a1a1a] transition-colors"
+          style={{
+            padding: "clamp(40px, 6vw, 68px) clamp(30px, 5vw, 65px)",
+            gap: "clamp(12px, 2vw, 18px)",
+          }}
         >
-          <img
-            src={
-              "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/L7hCOf5rCg/6stvzqdh_expires_30_days.png"
-            }
-            className="w-10 h-9 object-fill"
-          />
-          <span className="text-white text-3xl">{"Home Services"}</span>
-        </button>
-        <button
-          className="flex flex-col items-center bg-[#121212B0] text-left w-[345px] py-[68px] px-[21px] gap-[21px] rounded-[20px] border-0"
-          onClick={() => alert("Pressed!")}
+          <span
+            className="text-white"
+            style={{ fontSize: "clamp(1.25rem, 3vw, 1.875rem)" }}
+          >
+            {"Home Services"}
+          </span>
+        </Link>
+        <Link
+          //href="/services/professional"
+          className="flex flex-col items-center bg-[#121212B0] text-left rounded-[20px] border-0 cursor-pointer hover:bg-[#1a1a1a] transition-colors"
+          style={{
+            padding: "clamp(40px, 6vw, 68px) clamp(15px, 2vw, 21px)",
+            gap: "clamp(14px, 2vw, 21px)",
+          }}
         >
-          <img
-            src={
-              "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/L7hCOf5rCg/xmydqrk2_expires_30_days.png"
-            }
-            className="w-9 h-[33px] object-fill"
-          />
-          <span className="text-white text-3xl">{"Professional Services"}</span>
-        </button>
-        <button
-          className="flex flex-col items-center bg-[#121212B0] text-left w-[345px] py-[68px] px-[49px] gap-[18px] rounded-[20px] border-0"
-          onClick={() => alert("Pressed!")}
+          <span
+            className="text-white"
+            style={{ fontSize: "clamp(1.25rem, 3vw, 1.875rem)" }}
+          >
+            {"Professional Services"}
+          </span>
+        </Link>
+        <Link
+          //href="/services/creative"
+          className="flex flex-col items-center bg-[#121212B0] text-left rounded-[20px] border-0 cursor-pointer hover:bg-[#1a1a1a] transition-colors"
+          style={{
+            padding: "clamp(40px, 6vw, 68px) clamp(30px, 4vw, 49px)",
+            gap: "clamp(12px, 2vw, 18px)",
+          }}
         >
-          <img
-            src={
-              "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/L7hCOf5rCg/b6rag6df_expires_30_days.png"
-            }
-            className="w-[38px] h-9 object-fill"
-          />
-          <span className="text-white text-3xl">{"Creative Services"}</span>
-        </button>
+          <span
+            className="text-white whitespace-nowrap overflow-hidden text-ellipsis w-full text-center"
+            style={{ fontSize: "clamp(0.875rem, 2.5vw, 1.875rem)" }}
+          >
+            {"Creative Services"}
+          </span>
+        </Link>
       </div>
     </div>
   );

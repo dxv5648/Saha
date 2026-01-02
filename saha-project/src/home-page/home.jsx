@@ -30,6 +30,7 @@ function Body() {
         <AI />
         <About />
         <ServiceOverview />
+        <Contact />
       </div>
     </div>
   );
