@@ -18,9 +18,10 @@ function Body() {
       <img
         src={skyline}
         alt="Auckland skyline"
-        className="w-full opacity-60 absolute inset-0"
+        className="w-full opacity-60 inset-0"
       />
-      <div className="relative z-10"></div>
+
+      <div className="absolute inset-0 z-10"></div>
     </div>
   );
 }
