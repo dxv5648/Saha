@@ -4,6 +4,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import "./index.css";
 import Home from "./home-page/home.jsx";
 import Testing from "./home-page/test-button.jsx";
+import Profile from "./profile-page/profile.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -11,6 +12,7 @@ createRoot(document.getElementById("root")).render(
       <Routes>
         <Route exact path="/" element={<Home />} />
         <Route path="/Testing" element={<Testing />} />
+        <Route path="/Profile" element={<Profile />} />
       </Routes>
     </BrowserRouter>
   </StrictMode>

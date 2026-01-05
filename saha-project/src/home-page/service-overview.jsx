@@ -17,6 +17,7 @@ export default function ServiceOverview() {
         }}
       >
         <Link
+          to="/Profile"
           //href="/services/home"
           className="flex flex-col items-center bg-[#121212B0] text-left rounded-[20px] border-0 cursor-pointer hover:bg-[#1a1a1a] transition-colors"
           style={{
