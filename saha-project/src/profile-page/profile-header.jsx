@@ -1,29 +1,62 @@
 export default function ProfileHeader() {
   return (
-    <div className="flex flex-col items-center self-stretch py-[62px] gap-10">
-      <div className="flex flex-col items-center bg-[#161616F0] px-[386px] rounded-[40px]">
+    <div
+      className="flex flex-col items-center self-stretch gap-10"
+      style={{ padding: "clamp(30px, 5vw, 62px) clamp(20px, 3vw, 30px)" }}
+    >
+      <div
+        className="flex flex-col items-center bg-[#161616F0] rounded-[40px] w-full max-w-[900px]"
+        style={{ padding: "clamp(20px, 3vw, 30px)" }}
+      >
         <img
           src={
             "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/L7hCOf5rCg/xzduvii3_expires_30_days.png"
           }
-          className="w-32 h-32 mt-[21px] mb-[13px] object-fill"
+          className="object-fill rounded-full mb-[13px]"
+          style={{
+            width: "clamp(80px, 12vw, 128px)",
+            height: "clamp(80px, 12vw, 128px)",
+            marginTop: "clamp(10px, 2vw, 21px)",
+          }}
         />
-        <span className="text-white text-3xl mb-[13px]">{"John Williams"}</span>
-        <span className="text-[#D1D1D1] text-sm mb-[13px]">
+        <span
+          className="text-white mb-[13px] text-center"
+          style={{ fontSize: "clamp(1.5rem, 4vw, 1.875rem)" }}
+        >
+          {"John Williams"}
+        </span>
+        <span
+          className="text-[#D1D1D1] mb-[13px] text-center"
+          style={{ fontSize: "clamp(0.75rem, 1.5vw, 0.875rem)" }}
+        >
           {"Member  •  Auckland, New Zealand"}
         </span>
-        <div className="flex items-start mb-11 gap-2.5">
+        <div
+          className="flex flex-col sm:flex-row items-center w-full justify-center"
+          style={{
+            marginBottom: "clamp(30px, 4vw, 44px)",
+            gap: "clamp(8px, 1.5vw, 10px)",
+          }}
+        >
           <button
-            className="flex flex-col shrink-0 items-start bg-white text-left py-4 px-11 rounded-[20px] border-0"
+            className="bg-white text-black rounded-[20px] border-0 cursor-pointer hover:bg-gray-100 w-full sm:w-auto"
+            style={{
+              fontSize: "clamp(0.875rem, 2vw, 1.125rem)",
+              padding: "clamp(12px, 2vw, 16px) clamp(30px, 4vw, 44px)",
+            }}
             onClick={() => alert("Pressed!")}
           >
-            <span className="text-black text-lg">{"Edit Profile"}</span>
+            {"Edit Profile"}
           </button>
           <button
-            className="flex flex-col shrink-0 items-start bg-white text-left py-4 px-[51px] rounded-[20px] border-0"
+            className="bg-white text-black rounded-[20px] border-0 cursor-pointer hover:bg-gray-100 w-full sm:w-auto"
+            style={{
+              fontSize: "clamp(0.875rem, 2vw, 1.125rem)",
+              padding: "clamp(12px, 2vw, 16px) clamp(30px, 4vw, 51px)",
+            }}
             onClick={() => alert("Pressed!")}
           >
-            <span className="text-black text-lg">{"Settings"}</span>
+            {"Settings"}
           </button>
         </div>
       </div>

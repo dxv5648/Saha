@@ -1,30 +1,74 @@
 export default function PaymentMethods() {
   return (
-    <div className="flex flex-col items-start bg-[#161616F0] rounded-[40px] w-full">
-      <span className="text-white text-lg mt-[30px] mb-5 ml-10">
+    <div
+      className="flex flex-col items-start bg-[#161616F0] rounded-[40px] w-full max-w-[600px] mx-auto"
+      style={{ padding: "clamp(20px, 3vw, 30px)" }}
+    >
+      <span
+        className="text-white mb-5"
+        style={{ fontSize: "clamp(1rem, 2vw, 1.125rem)" }}
+      >
         {"Payment Methods"}
       </span>
-      <span className="text-white text-sm mb-[9px] ml-[27px]">{"Name"}</span>
-      <div className="flex flex-col items-start bg-[#1C1C1CB0] py-[15px] pl-3 pr-[394px] mb-1.5 mx-[27px] rounded-[10px] border border-solid border-[#434343]">
-        <span className="text-[#D1D1D1] text-sm">{"John Williams"}</span>
-      </div>
-      <span className="text-white text-sm mb-1.5 ml-[27px]">{"Email"}</span>
-      <div className="flex flex-col items-start bg-[#1C1C1CB0] py-[15px] pl-3 pr-[298px] mb-[7px] ml-[27px] rounded-[10px] border border-solid border-[#434343]">
-        <span className="text-[#D1D1D1] text-sm">
-          {"john.williams@example.com"}
-        </span>
-      </div>
-      <span className="text-white text-sm mb-[5px] ml-[27px]">
+
+      <span
+        className="text-white mb-[9px]"
+        style={{ fontSize: "clamp(0.75rem, 1.5vw, 0.875rem)" }}
+      >
+        {"Name"}
+      </span>
+      <input
+        type="text"
+        defaultValue="John Williams"
+        className="bg-[#1C1C1CB0] text-[#D1D1D1] w-full mb-1.5 rounded-[10px] border border-solid border-[#434343] outline-none focus:border-[#666]"
+        style={{
+          fontSize: "clamp(0.75rem, 1.5vw, 0.875rem)",
+          padding: "clamp(12px, 2vw, 15px)",
+        }}
+      />
+
+      <span
+        className="text-white mb-1.5"
+        style={{ fontSize: "clamp(0.75rem, 1.5vw, 0.875rem)" }}
+      >
+        {"Email"}
+      </span>
+      <input
+        type="email"
+        defaultValue="john.williams@example.com"
+        className="bg-[#1C1C1CB0] text-[#D1D1D1] w-full mb-[7px] rounded-[10px] border border-solid border-[#434343] outline-none focus:border-[#666]"
+        style={{
+          fontSize: "clamp(0.75rem, 1.5vw, 0.875rem)",
+          padding: "clamp(12px, 2vw, 15px)",
+        }}
+      />
+
+      <span
+        className="text-white mb-[5px]"
+        style={{ fontSize: "clamp(0.75rem, 1.5vw, 0.875rem)" }}
+      >
         {"Card Number"}
       </span>
-      <div className="flex flex-col items-start bg-[#1C1C1CB0] py-[15px] pl-[7px] pr-[360px] mb-1.5 ml-[27px] rounded-[10px] border border-solid border-[#434343]">
-        <span className="text-[#D1D1D1] text-sm">{"•••• •••• •••• 1111"}</span>
-      </div>
+      <input
+        type="text"
+        defaultValue="•••• •••• •••• 1111"
+        className="bg-[#1C1C1CB0] text-[#D1D1D1] w-full mb-1.5 rounded-[10px] border border-solid border-[#434343] outline-none focus:border-[#666]"
+        style={{
+          fontSize: "clamp(0.75rem, 1.5vw, 0.875rem)",
+          padding: "clamp(12px, 2vw, 15px)",
+        }}
+      />
+
       <button
-        className="flex flex-col items-start bg-white text-left py-[15px] px-[197px] mb-3.5 ml-[27px] rounded-[10px] border-0"
+        className="bg-white text-black w-full rounded-[10px] border-0 cursor-pointer hover:bg-gray-100"
+        style={{
+          fontSize: "clamp(0.75rem, 1.5vw, 0.875rem)",
+          padding: "clamp(12px, 2vw, 15px)",
+          marginTop: "clamp(8px, 1.5vw, 14px)",
+        }}
         onClick={() => alert("Pressed!")}
       >
-        <span className="text-black text-sm">{"Add New Card"}</span>
+        {"Add New Card"}
       </button>
     </div>
   );

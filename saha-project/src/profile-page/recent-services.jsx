@@ -1,33 +1,62 @@
 export default function RecentServices() {
   return (
-    <div className="flex flex-col items-start">
-      <div className="flex flex-col items-start bg-[#161616F0] rounded-[40px] w-full">
-        <span className="text-white text-lg mt-[30px] mb-5 ml-[34px]">
+    <div className="flex flex-col items-start w-full">
+      <div
+        className="flex flex-col items-start bg-[#161616F0] rounded-[40px] w-full"
+        style={{ padding: "clamp(20px, 3vw, 30px)" }}
+      >
+        <span
+          className="text-white mb-5"
+          style={{ fontSize: "clamp(1rem, 2vw, 1.125rem)" }}
+        >
           {"Recent Bookings"}
         </span>
-        <div className="flex items-center bg-[#1C1C1CB0] py-2.5 mb-[39px] mx-6 rounded-[20px] border border-solid border-[#434343]">
+        <div
+          className="flex items-center bg-[#1C1C1CB0] w-full mb-[39px] rounded-[20px] border border-solid border-[#434343]"
+          style={{
+            padding: "clamp(10px, 2vw, 16px)",
+            gap: "clamp(8px, 1.5vw, 11px)",
+          }}
+        >
           <img
             src={
               "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/L7hCOf5rCg/77n9nlug_expires_30_days.png"
             }
-            className="w-[66px] h-[73px] ml-4 mr-[11px] object-fill"
+            className="object-fill flex-shrink-0"
+            style={{
+              width: "clamp(50px, 8vw, 66px)",
+              height: "clamp(55px, 9vw, 73px)",
+            }}
           />
-          <div className="flex flex-col shrink-0 items-start mr-[282px]">
-            <span className="text-white text-sm mb-[9px] mr-[11px]">
+          <div className="flex flex-col items-start flex-grow">
+            <span
+              className="text-white mb-[9px]"
+              style={{ fontSize: "clamp(0.75rem, 1.5vw, 0.875rem)" }}
+            >
               {"Master Electrician"}
             </span>
-            <span className="text-[#D1D1D1] text-sm mb-1">
+            <span
+              className="text-[#D1D1D1] mb-1"
+              style={{ fontSize: "clamp(0.75rem, 1.5vw, 0.875rem)" }}
+            >
               {"December 12, 2023"}
             </span>
             <button
-              className="flex flex-col items-start bg-[#434343] text-left py-[3px] px-3 mr-[25px] rounded-[10px] border-0"
+              className="bg-[#434343] text-white rounded-[10px] border-0 cursor-pointer hover:bg-[#555]"
+              style={{
+                fontSize: "clamp(0.75rem, 1.5vw, 0.875rem)",
+                padding: "clamp(2px, 0.5vw, 3px) clamp(8px, 1.5vw, 12px)",
+              }}
               onClick={() => alert("Pressed!")}
             >
-              <span className="text-white text-sm">{"View Details"}</span>
+              {"View Details"}
             </button>
           </div>
         </div>
-        <span className="text-[#D1D1D1] text-sm mb-[47px] ml-[161px]">
+        <span
+          className="text-[#D1D1D1] text-center w-full mb-[47px]"
+          style={{ fontSize: "clamp(0.75rem, 1.5vw, 0.875rem)" }}
+        >
           {"No more recent booking to display"}
         </span>
       </div>

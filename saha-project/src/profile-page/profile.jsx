@@ -29,8 +29,7 @@ function Body() {
       <div className="absolute inset-0 z-10 flex flex-col">
         <ProfileHeader />
 
-        {/* Three Column Layout */}
-        <div className="flex gap-6 px-12 py-8">
+        <div className="flex flex-col lg:flex-row gap-6 px-12 py-8">
           <div className="flex-1">
             <RecentServices />
           </div>
@@ -39,8 +38,7 @@ function Body() {
           </div>
         </div>
 
-        {/* Favourite Services */}
-        <div className="flex gap-6 px-12 py-8">
+        <div className="flex flex-col lg:flex-row gap-6 px-12 py-8">
           <div className="flex-1">
             <FavouriteServices />
           </div>
