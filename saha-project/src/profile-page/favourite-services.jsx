@@ -1,3 +1,5 @@
+import Electrician from "../assets/Electrician.jpg";
+
 export default function FavouriteServices() {
   return (
     <div
@@ -22,9 +24,7 @@ export default function FavouriteServices() {
           style={{ paddingBottom: "clamp(8px, 1.5vw, 10px)" }}
         >
           <img
-            src={
-              "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/L7hCOf5rCg/3meho1py_expires_30_days.png"
-            }
+            src={Electrician}
             className="w-full object-cover rounded-t-[30px]"
             style={{
               height: "clamp(180px, 25vw, 231px)",
@@ -55,9 +55,7 @@ export default function FavouriteServices() {
           style={{ paddingBottom: "clamp(8px, 1.5vw, 10px)" }}
         >
           <img
-            src={
-              "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/L7hCOf5rCg/278pq7fd_expires_30_days.png"
-            }
+            src={Electrician}
             className="w-full object-cover rounded-t-[30px]"
             style={{
               height: "clamp(180px, 25vw, 231px)",

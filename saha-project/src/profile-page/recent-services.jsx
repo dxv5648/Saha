@@ -18,16 +18,6 @@ export default function RecentServices() {
             gap: "clamp(8px, 1.5vw, 11px)",
           }}
         >
-          <img
-            src={
-              "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/L7hCOf5rCg/77n9nlug_expires_30_days.png"
-            }
-            className="object-fill flex-shrink-0"
-            style={{
-              width: "clamp(50px, 8vw, 66px)",
-              height: "clamp(55px, 9vw, 73px)",
-            }}
-          />
           <div className="flex flex-col items-start flex-grow">
             <span
               className="text-white mb-[9px]"

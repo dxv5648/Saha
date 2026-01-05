@@ -1,3 +1,5 @@
+import Face from "../assets/Face.jpg";
+
 export default function ProfileHeader() {
   return (
     <div
@@ -9,9 +11,7 @@ export default function ProfileHeader() {
         style={{ padding: "clamp(20px, 3vw, 30px)" }}
       >
         <img
-          src={
-            "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/L7hCOf5rCg/xzduvii3_expires_30_days.png"
-          }
+          src={Face}
           className="object-fill rounded-full mb-[13px]"
           style={{
             width: "clamp(80px, 12vw, 128px)",
