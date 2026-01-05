@@ -5,6 +5,7 @@ import "./index.css";
 import Home from "./home-page/home.jsx";
 import Testing from "./home-page/test-button.jsx";
 import Profile from "./profile-page/profile.jsx";
+import Service from "./service-page/service.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -13,6 +14,7 @@ createRoot(document.getElementById("root")).render(
         <Route exact path="/" element={<Home />} />
         <Route path="/Testing" element={<Testing />} />
         <Route path="/Profile" element={<Profile />} />
+        <Route path="/Service" element={<Service />} />
       </Routes>
     </BrowserRouter>
   </StrictMode>

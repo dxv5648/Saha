@@ -7,7 +7,7 @@ import FavouriteServices from "./favourite-services.jsx";
 import PaymentMethods from "./payment-method.jsx";
 import PersonalDetails from "./Personal-Details.jsx";
 
-export default function Home() {
+export default function Profile() {
   return (
     <div className="bg-black min-h-screen min-w-screen flex flex-col">
       <Header />

@@ -8,7 +8,9 @@ export default function Header() {
           <button>About</button>
         </Link>
 
-        <button>Services</button>
+        <Link to="/Service" className="hover:text-gray-300">
+          <button>Services</button>
+        </Link>
         <button className="text-4xl font-bold mx-[20%]">saha.</button>
         <button>Contact</button>
         <button>Login</button>
