@@ -1,6 +1,6 @@
 import skyline from "../assets/Auckland-Skyline-Dark.jpg";
 
-export default function about() {
+export default function Background() {
   return (
     <div className="w-full relative">
       <div className="absolute inset-0 h-[150vh]">
