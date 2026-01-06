@@ -1,6 +1,21 @@
+import { useState } from "react";
 import AI from "../assets/Google-AI-Logo.png";
 
-export default function about() {
+export default function About() {
+  const [inputValue, setInputValue] = useState("");
+
+  const handleSubmit = () => {
+    if (inputValue.trim()) {
+      alert(inputValue);
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      handleSubmit();
+    }
+  };
+
   return (
     <div className="flex flex-col items-center mt-[211px] mb-[261px] w-full px-[10vw]">
       <span
@@ -10,7 +25,7 @@ export default function about() {
         {"What service do you require?"}
       </span>
       <div
-        className="flex items-center bg-[#121212B0] mb-[39px] rounded-[50px] w-full max-w-[800px]"
+        className="flex items-center bg-[#0F0F0FB5] mb-[39px] rounded-[50px] w-full max-w-[800px]"
         style={{ padding: "clamp(8px, 1.5vw, 13px)" }}
       >
         <img
@@ -24,12 +39,15 @@ export default function about() {
         />
         <input
           type="text"
-          placeholder="Cleaner"
+          placeholder="Describe your requirements..."
           className="bg-transparent text-[#BABABA] flex-grow outline-none placeholder-[#BABABA]"
           style={{
             fontSize: "clamp(0.875rem, 2vw, 1.25rem)",
             marginLeft: "clamp(8px, 1vw, 12px)",
           }}
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          onKeyPress={handleKeyPress}
         />
         <button
           className="bg-[transparent] text-white font-bold rounded-[30px] flex-shrink-0"
@@ -38,6 +56,7 @@ export default function about() {
             padding: "clamp(6px, 1vw, 10px) clamp(15px, 2vw, 25px)",
             marginRight: "clamp(6px, 1vw, 10px)",
           }}
+          onClick={handleSubmit}
         >
           {" "}
           {"🡢"}

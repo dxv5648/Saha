@@ -1,14 +1,26 @@
+import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import About from "./about.jsx";
 import Footer from "./Footer.jsx";
 import Header from "./Header.jsx";
 import AI from "./ai-search.jsx";
 import ServiceOverview from "./service-overview.jsx";
 import Contact from "./contact.jsx";
-import skyline from "../assets/Auckland-Skyline-Dark.jpg";
-
-//import Login from "../login.jsx"
+import Background from "./background.jsx";
 
 export default function Home() {
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.hash) {
+      const id = location.hash.replace("#", "");
+      setTimeout(() => {
+        const element = document.getElementById(id);
+        element?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+    }
+  }, [location]);
+
   return (
     <div className="bg-black min-h-screen min-w-screen flex flex-col">
       <Header />
@@ -20,17 +32,17 @@ export default function Home() {
 
 function Body() {
   return (
-    <div className="w-full relative">
-      <img
-        src={skyline}
-        alt="Auckland skyline"
-        className="w-full opacity-60 absolute inset-0"
-      />
+    <div>
+      <Background />
       <div className="relative z-10">
         <AI />
-        <About />
+        <div id="about">
+          <About />
+        </div>
         <ServiceOverview />
-        <Contact />
+        <div id="contact">
+          <Contact />
+        </div>
       </div>
     </div>
   );

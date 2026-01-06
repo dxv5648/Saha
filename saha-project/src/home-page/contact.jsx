@@ -25,7 +25,7 @@ export default function Contact() {
 
       <div className="flex flex-wrap items-start justify-center gap-8 max-w-6xl w-full">
         {/* Contact Information */}
-        <div className="flex flex-col items-center bg-[#121212B0] backdrop-blur-sm w-full max-w-[531px] px-8 py-14 rounded-3xl">
+        <div className="flex flex-col items-center bg-[#0F0F0FB5] backdrop-blur-sm w-full max-w-[531px] px-8 py-14 rounded-3xl">
           <h2 className="text-white text-3xl font-bold mb-14">Get in Touch</h2>
 
           <div className="flex flex-col items-start w-full gap-8">
@@ -80,7 +80,7 @@ export default function Contact() {
         </div>
 
         {/* Contact Form */}
-        <div className="flex flex-col items-center bg-[#121212B0] backdrop-blur-sm w-full max-w-[531px] p-8 rounded-3xl">
+        <div className="flex flex-col items-center bg-[#0F0F0FB5] backdrop-blur-sm w-full max-w-[531px] p-8 rounded-3xl">
           <h2 className="text-white text-3xl font-bold mb-12">Send an Email</h2>
 
           <div className="flex flex-col w-full gap-6">
@@ -89,7 +89,7 @@ export default function Contact() {
               placeholder="Name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full text-white placeholder:text-gray-400 bg-[#0F0F0F] text-lg py-4 px-4 rounded-xl border border-gray-600 focus:border-white focus:outline-none transition-colors"
+              className="w-full text-white placeholder:text-gray-400 bg-[#0f0f0f] text-lg py-4 px-4 rounded-xl border border-gray-600 focus:border-white focus:outline-none transition-colors"
             />
 
             <input

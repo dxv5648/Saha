@@ -3,11 +3,11 @@ export default function about() {
     <div>
       <div className="flex flex-col items-center self-stretch w-full px-[10vw]">
         <div
-          className="flex flex-col items-start bg-[#121212B0] rounded-[20px] w-full max-w-[926px]"
-          style={{ padding: "clamp(25px, 3vw, 37px)" }}
+          className="flex flex-col items-start bg-[#0F0F0FB5] rounded-[20px] max-w-231.5"
+          style={{ padding: "clamp(25px, 3vw, 30px)" }}
         >
           <span
-            className="text-white font-bold mb-[35px] text-center w-full"
+            className="text-white font-bold mb-8.75 text-center w-full"
             style={{
               fontSize: "clamp(1.5rem, 4vw, 1.875rem)",
               marginTop: "clamp(30px, 4vw, 52px)",
@@ -16,7 +16,7 @@ export default function about() {
             {"About saha."}
           </span>
           <span
-            className="text-[#F3F3F3] w-full mb-[35px]"
+            className="text-[#F3F3F3] w-full mb-8.75"
             style={{ fontSize: "clamp(0.875rem, 2vw, 1.125rem)" }}
           >
             {
