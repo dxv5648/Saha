@@ -17,20 +17,20 @@ export default function About() {
   };
 
   return (
-    <div className="flex flex-col items-center mt-[211px] mb-[261px] w-full px-[10vw]">
+    <div className="flex flex-col items-center mt-52.75 mb-65.25 w-full px-[10vw]">
       <span
-        className="text-white font-bold mt-[26px] mb-[38px] text-center w-full max-w-[800px] whitespace-nowrap"
+        className="text-white poppins-bold mt-6.5 mb-9.5 text-center w-full max-w-200 whitespace-nowrap"
         style={{ fontSize: "clamp(1.5rem, 5vw, 3.75rem)" }}
       >
         {"What service do you require?"}
       </span>
       <div
-        className="flex items-center bg-[#0F0F0FB5] mb-[39px] rounded-[50px] w-full max-w-[800px]"
+        className="flex items-center bg-[#0F0F0FB5] mb-9.75 rounded-[50px] w-full max-w-200"
         style={{ padding: "clamp(8px, 1.5vw, 13px)" }}
       >
         <img
           src={AI}
-          className="object-fill flex-shrink-0"
+          className="object-fill shrink-0"
           style={{
             width: "clamp(30px, 5vw, 50px)",
             height: "clamp(30px, 5vw, 50px)",
@@ -40,7 +40,7 @@ export default function About() {
         <input
           type="text"
           placeholder="Describe your requirements..."
-          className="bg-transparent text-[#BABABA] flex-grow outline-none placeholder-[#BABABA]"
+          className="bg-transparent inter-regular text-[#BABABA] grow outline-none placeholder-[#BABABA]"
           style={{
             fontSize: "clamp(0.875rem, 2vw, 1.25rem)",
             marginLeft: "clamp(8px, 1vw, 12px)",
@@ -50,7 +50,7 @@ export default function About() {
           onKeyPress={handleKeyPress}
         />
         <button
-          className="bg-[transparent] text-white font-bold rounded-[30px] flex-shrink-0"
+          className="bg-transparent text-white font-bold rounded-[30px] shrink-0"
           style={{
             fontSize: "clamp(0.875rem, 2vw, 1.25rem)",
             padding: "clamp(6px, 1vw, 10px) clamp(15px, 2vw, 25px)",

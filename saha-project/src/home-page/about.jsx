@@ -7,7 +7,7 @@ export default function about() {
           style={{ padding: "clamp(25px, 3vw, 30px)" }}
         >
           <span
-            className="text-white font-bold mb-8.75 text-center w-full"
+            className="text-white inter-semi-bold mb-8.75 text-center w-full"
             style={{
               fontSize: "clamp(1.5rem, 4vw, 1.875rem)",
               marginTop: "clamp(30px, 4vw, 52px)",
@@ -16,7 +16,7 @@ export default function about() {
             {"About saha."}
           </span>
           <span
-            className="text-[#F3F3F3] w-full mb-8.75"
+            className="text-[#F3F3F3] inter-regular w-full mb-8.75"
             style={{ fontSize: "clamp(0.875rem, 2vw, 1.125rem)" }}
           >
             {

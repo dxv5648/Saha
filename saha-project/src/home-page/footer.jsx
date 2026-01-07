@@ -15,7 +15,7 @@ export default function Footer() {
   };
 
   return (
-    <div className="bg-[#0F0F0F] text-[#BABABA] text-sm py-8 px-8 text-center mt-auto">
+    <div className="bg-[#0F0F0F] text-[#BABABA] inter-regular text-sm py-8 px-8 text-center mt-auto">
       <Link to="/" className="hover:text-white">
         Saha
       </Link>{" "}

@@ -21,7 +21,7 @@ export default function Header() {
   };
 
   return (
-    <div className="bg-[#0F0F0F#0F0F0F] text-white w-full py-4 font-inter">
+    <div className="bg-[#0F0F0F#0F0F0F] text-white w-full py-4 inter-regular">
       <div className="mx-[10%] flex justify-evenly items-center">
         <button
           onClick={() => handleScrollTo("about")}
@@ -34,7 +34,7 @@ export default function Header() {
           <button>Services</button>
         </Link>
         <Link to="/">
-          <button className="text-4xl font-bold mx-[20%]">saha.</button>
+          <button className="text-4xl inter-semi-bold mx-[20%]">saha.</button>
         </Link>
         <button
           onClick={() => handleScrollTo("contact")}
