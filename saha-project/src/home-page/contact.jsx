@@ -21,19 +21,23 @@ export default function Contact() {
 
   return (
     <div className="flex flex-col items-center gap-12 p-8 min-h-screen">
-      <h1 className="text-white text-4xl font-bold">Contact</h1>
+      <h1 className="text-white text-4xl poppins-bold">Contact</h1>
 
       <div className="flex flex-wrap items-start justify-center gap-8 max-w-6xl w-full">
         {/* Contact Information */}
-        <div className="flex flex-col items-center bg-[#121212B0] backdrop-blur-sm w-full max-w-[531px] px-8 py-14 rounded-3xl">
-          <h2 className="text-white text-3xl font-bold mb-14">Get in Touch</h2>
+        <div className="flex flex-col items-center bg-[#0F0F0FB5] backdrop-blur-sm w-full max-w-132.75 px-8 py-14 rounded-3xl">
+          <h2 className="text-white text-3xl poppins-bold mb-14">
+            Get in Touch
+          </h2>
 
           <div className="flex flex-col items-start w-full gap-8">
             {/* Address */}
             <div className="flex items-start gap-4">
               <div className="flex flex-col gap-3">
-                <span className="text-white text-lg font-bold">Address</span>
-                <span className="text-gray-300 text-base leading-relaxed">
+                <span className="text-white text-lg inter-semi-bold">
+                  Address
+                </span>
+                <span className="text-gray-300 inter-regular leading-relaxed">
                   123 Queen Street
                   <br />
                   Auckland CBD
@@ -46,8 +50,10 @@ export default function Contact() {
             {/* Email */}
             <div className="flex items-start gap-4">
               <div className="flex flex-col gap-3">
-                <span className="text-white text-lg font-bold">Email</span>
-                <div className="text-gray-300 text-base">
+                <span className="text-white text-lg inter-semi-bold">
+                  Email
+                </span>
+                <div className="text-gray-300 inter-regular">
                   <a
                     href="mailto:hello@saha.nz"
                     className="hover:text-white transition-colors block"
@@ -67,10 +73,12 @@ export default function Contact() {
             {/* Phone */}
             <div className="flex items-start gap-4">
               <div className="flex flex-col gap-3">
-                <span className="text-white text-lg font-bold">Phone</span>
+                <span className="text-white text-lg inter-semi-bold">
+                  Phone
+                </span>
                 <a
                   href="tel:+6491234567"
-                  className="text-gray-300 text-base hover:text-white transition-colors"
+                  className="text-gray-300 inter-regular hover:text-white transition-colors"
                 >
                   +64 9 123 4567
                 </a>
@@ -80,8 +88,10 @@ export default function Contact() {
         </div>
 
         {/* Contact Form */}
-        <div className="flex flex-col items-center bg-[#121212B0] backdrop-blur-sm w-full max-w-[531px] p-8 rounded-3xl">
-          <h2 className="text-white text-3xl font-bold mb-12">Send an Email</h2>
+        <div className="flex flex-col items-center bg-[#0F0F0FB5] backdrop-blur-sm w-full max-w-132.75 p-8 rounded-3xl">
+          <h2 className="text-white text-3xl poppins-bold mb-12">
+            Send an Email
+          </h2>
 
           <div className="flex flex-col w-full gap-6">
             <input
@@ -89,7 +99,7 @@ export default function Contact() {
               placeholder="Name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full text-white placeholder:text-gray-400 bg-[#0F0F0F] text-lg py-4 px-4 rounded-xl border border-gray-600 focus:border-white focus:outline-none transition-colors"
+              className="w-full inter-regular text-white placeholder:text-gray-400 bg-[#0f0f0f] text-lg py-4 px-4 rounded-xl border border-gray-600 focus:border-white focus:outline-none transition-colors"
             />
 
             <input
@@ -97,7 +107,7 @@ export default function Contact() {
               placeholder="your.email@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full text-white placeholder:text-gray-400 bg-[#0F0F0F] text-lg py-4 px-4 rounded-xl border border-gray-600 focus:border-white focus:outline-none transition-colors"
+              className="w-full inter-regular text-white placeholder:text-gray-400 bg-[#0F0F0F] text-lg py-4 px-4 rounded-xl border border-gray-600 focus:border-white focus:outline-none transition-colors"
             />
 
             <textarea
@@ -105,12 +115,12 @@ export default function Contact() {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               rows={6}
-              className="w-full text-white placeholder:text-gray-400 bg-[#0F0F0F] text-lg py-4 px-4 rounded-xl border border-gray-600 focus:border-white focus:outline-none resize-none transition-colors"
+              className="w-full inter-regular text-white placeholder:text-gray-400 bg-[#0F0F0F] text-lg py-4 px-4 rounded-xl border border-gray-600 focus:border-white focus:outline-none resize-none transition-colors"
             />
 
             <button
               onClick={handleSubmit}
-              className="w-full bg-white hover:bg-gray-100 text-black text-xl font-semibold py-4 rounded-xl transition-colors active:scale-95 transform"
+              className="w-full inter-semi-bold bg-white hover:bg-gray-100 text-black text-xl font-semibold py-4 rounded-xl transition-colors active:scale-95 transform"
             >
               Send Message
             </button>
