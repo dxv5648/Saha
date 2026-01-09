@@ -15,11 +15,11 @@ export default function filter({
   return (
     <div
       className="flex flex-col items-start self-stretch relative"
-      style={{ marginBottom: "clamp(100px, 15vw, 286px)" }}
+      style={{ marginBottom: "clamp(40px, 8vw)" }}
     >
       <div className="self-stretch ">
         <div
-          className="flex flex-col items-start bg-[#121212B0] rounded-[30px] border border-solid border-[#BABABA] "
+          className="flex flex-col items-start bg-[#121212B0] rounded-[30px]  "
           style={{
             padding: "clamp(20px, 3vw, 42px) clamp(20px, 3vw, 52px)",
             margin: "clamp(30px, 5vw, 60px) clamp(20px, 5vw, 74px)",
@@ -30,13 +30,13 @@ export default function filter({
             style={{ gap: "clamp(15px, 2vw, 20px)" }}
           >
             <span
-              className="text-white font-bold"
+              className="text-white poppins-bold"
               style={{ fontSize: "clamp(1.5rem, 5vw, 2.5rem)" }}
             >
               {"Find The Perfect Service"}
             </span>
             <button
-              className="bg-white text-black rounded-[20px] border-0 cursor-pointer hover:bg-gray-100 whitespace-nowrap"
+              className="bg-white inter-regular text-black rounded-[20px] border-0 cursor-pointer hover:bg-gray-100 whitespace-nowrap"
               style={{
                 fontSize: "clamp(0.875rem, 2vw, 1.125rem)",
                 padding: "clamp(12px, 2vw, 16px) clamp(30px, 5vw, 96px)",
@@ -47,7 +47,7 @@ export default function filter({
             </button>
           </div>
           <span
-            className="text-white mb-[30px]"
+            className="text-white inter-regular mb-7.5"
             style={{ fontSize: "clamp(0.875rem, 2vw, 1.125rem)" }}
           >
             {"Browse through our trusted service providers"}
@@ -59,12 +59,12 @@ export default function filter({
               marginBottom: "clamp(15px, 2vw, 27px)",
             }}
           >
-            <div className="flex flex-1 items-center bg-[#0F0F0F] rounded-[25px] border border-solid border-[#BABABA] w-full">
+            <div className="flex flex-1 inter-regular items-center bg-[#1f1f1f] rounded-[25px]  w-full">
               <img
                 src={
                   "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/L7hCOf5rCg/9lidi5l2_expires_30_days.png"
                 }
-                className="object-fill flex-shrink-0"
+                className="object-fill shrink-0"
                 style={{
                   width: "clamp(18px, 2vw, 23px)",
                   height: "clamp(17px, 2vw, 22px)",
@@ -85,7 +85,7 @@ export default function filter({
             </div>
             <div className="relative w-full lg:w-auto">
               <button
-                className="flex items-center bg-[#0F0F0F] text-left rounded-[25px] border border-solid border-[#BABABA] cursor-pointer hover:bg-[#1a1a1a] w-full lg:w-auto justify-between"
+                className="flex items-center inter-regular bg-[#1f1f1f] text-left rounded-[25px] cursor-pointer hover:bg-[#1a1a1a] w-full lg:w-auto justify-between"
                 style={{
                   fontSize: "clamp(0.875rem, 1.8vw, 1.125rem)",
                   padding: "clamp(14px, 2vw, 17px) clamp(15px, 2vw, 18px)",
@@ -100,7 +100,7 @@ export default function filter({
                   src={
                     "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/L7hCOf5rCg/2fqviavt_expires_30_days.png"
                   }
-                  className="object-fill flex-shrink-0"
+                  className="object-fill shrink-0"
                   style={{
                     width: "clamp(20px, 2.5vw, 25px)",
                     height: "clamp(14px, 1.7vw, 17px)",
@@ -108,7 +108,7 @@ export default function filter({
                 />
               </button>
               {showCategories && (
-                <div className="absolute top-full left-0 right-0 lg:left-0 mt-2 bg-[#0F0F0F] border border-solid border-[#BABABA] rounded-[15px] z-50 max-h-64 overflow-y-auto">
+                <div className="absolute top-full left-0 right-0 lg:left-0 mt-2 bg-[#0F0F0F]  rounded-[15px] z-50 max-h-64 overflow-y-auto">
                   {categories.map((category) => (
                     <button
                       key={category}
@@ -131,7 +131,7 @@ export default function filter({
             </div>
             <div className="relative w-full lg:w-auto">
               <button
-                className="flex items-center bg-[#0F0F0F] text-left rounded-[25px] border border-solid border-[#BABABA] cursor-pointer hover:bg-[#1a1a1a] w-full lg:w-auto justify-between"
+                className="flex items-center inter-regular bg-[#1f1f1f] text-left rounded-[25px]  cursor-pointer hover:bg-[#1a1a1a] w-full lg:w-auto justify-between"
                 style={{
                   fontSize: "clamp(0.875rem, 1.8vw, 1.125rem)",
                   padding: "clamp(14px, 2vw, 17px) clamp(15px, 2vw, 22px)",
@@ -146,7 +146,7 @@ export default function filter({
                   src={
                     "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/L7hCOf5rCg/fnh78bg4_expires_30_days.png"
                   }
-                  className="object-fill flex-shrink-0"
+                  className="object-fill shrink-0"
                   style={{
                     width: "clamp(20px, 2.5vw, 25px)",
                     height: "clamp(14px, 1.7vw, 17px)",
@@ -154,7 +154,7 @@ export default function filter({
                 />
               </button>
               {showSort && (
-                <div className="absolute top-full left-0 right-0 lg:left-0 mt-2 bg-[#0F0F0F] border border-solid border-[#BABABA] rounded-[15px] z-50 max-h-64 overflow-y-auto">
+                <div className="absolute top-full left-0 right-0 lg:left-0 mt-2 bg-[#0F0F0F]  rounded-[15px] z-50 max-h-64 overflow-y-auto">
                   {[
                     "Featured",
                     "Title (A-Z)",

@@ -1,3 +1,5 @@
+import WorkImage from "../assets/Work-imgae.png";
+
 export default function ServiceIcon({ service = {} }) {
   const {
     name = "Master Electrician",
@@ -14,23 +16,21 @@ export default function ServiceIcon({ service = {} }) {
       style={{ marginBottom: "clamp(80px, 12vw, 151px)" }}
     >
       <div
-        className="flex flex-1 flex-col items-start bg-gradient-to-b from-[#1a1a1a] to-[#0d0d0d] rounded-[30px] border border-solid border-[#BABABA] border-opacity-40 overflow-hidden shadow-2xl hover:shadow-[0_20px_40px_rgba(255,255,255,0.1)] transition-all duration-300 hover:border-opacity-60 hover:scale-105"
+        className="flex flex-1 flex-col items-start bg-linear-to-b from-[#1a1a1a] to-[#0d0d0d] rounded-[30px] overflow-hidden shadow-2xl hover:shadow-[0_20px_40px_rgba(255,255,255,0.1)] transition-all duration-300 hover:scale-105"
         style={{
           transform: "perspective(1000px)",
         }}
       >
         <div className="relative w-full overflow-hidden">
           <img
-            src={
-              "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/L7hCOf5rCg/zsd0xlij_expires_30_days.png"
-            }
+            src={WorkImage}
             className="w-full object-cover rounded-t-[30px] transition-transform duration-500 hover:scale-110"
             style={{
               height: "clamp(250px, 35vw, 393px)",
               marginBottom: "clamp(6px, 1vw, 9px)",
             }}
           />
-          <div className="absolute top-0 right-0 bg-gradient-to-l from-black to-transparent px-4 py-2 rounded-bl-xl">
+          <div className="absolute top-0 right-0 bg-linear-to-l from-black to-transparent px-4 py-2 rounded-bl-xl">
             <span
               className="text-white font-bold"
               style={{
@@ -47,7 +47,11 @@ export default function ServiceIcon({ service = {} }) {
           style={{ paddingTop: "clamp(12px, 2vw, 18px)" }}
         >
           <span
-            className="text-white font-bold block mb-[8px] leading-tight"
+            className={`text-white block mb-2 leading-tight ${
+              name === "Master Electrician"
+                ? "inter-semi-bold"
+                : "inter-regular"
+            }`}
             style={{
               fontSize: "clamp(1.125rem, 2.5vw, 1.375rem)",
             }}
@@ -56,7 +60,7 @@ export default function ServiceIcon({ service = {} }) {
           </span>
 
           <span
-            className="text-[#BABABA] text-sm block mb-[16px]"
+            className="text-[#BABABA] text-sm block mb-4"
             style={{
               fontSize: "clamp(0.75rem, 1.5vw, 0.875rem)",
             }}
@@ -65,7 +69,7 @@ export default function ServiceIcon({ service = {} }) {
           </span>
 
           <div
-            className="flex items-center justify-between w-full mb-[20px] bg-[#0F0F0F] bg-opacity-50 rounded-[15px] px-3 py-2"
+            className="flex items-center justify-between w-full mb-5 bg-[#0F0F0F] bg-opacity-50 rounded-[15px] px-3 py-2"
             style={{
               gap: "clamp(4px, 1vw, 5px)",
             }}
@@ -99,7 +103,7 @@ export default function ServiceIcon({ service = {} }) {
           </div>
 
           <button
-            className="bg-gradient-to-r from-white to-gray-200 text-black text-center rounded-[20px] border-0 cursor-pointer w-full font-semibold transition-all duration-300 hover:from-gray-100 hover:to-gray-300 hover:shadow-lg active:scale-95"
+            className="bg-linear-to-r from-white to-gray-200 text-black text-center rounded-[20px] border-0 cursor-pointer w-full font-semibold transition-all duration-300 hover:from-gray-100 hover:to-gray-300 hover:shadow-lg active:scale-95"
             style={{
               fontSize: "clamp(0.875rem, 2vw, 1.125rem)",
               padding: "clamp(14px, 2vw, 18px)",

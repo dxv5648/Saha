@@ -91,6 +91,9 @@ function Body() {
           sortBy={sortBy}
           onSortChange={handleSortChange}
         />
+        <h1 className="text-white text-center text-4xl poppins-bold px-[2vw] mb-10">
+          Services in your area
+        </h1>
         <div
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 w-full px-[2vw]"
           style={{
@@ -104,7 +107,7 @@ function Body() {
         </div>
 
         {filteredServices.length === 0 && (
-          <div className="text-center text-white text-xl py-12">
+          <div className="text-center inter-regular text-white text-xl py-12">
             No services found matching your criteria.
           </div>
         )}
