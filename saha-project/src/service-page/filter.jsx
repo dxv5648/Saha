@@ -155,7 +155,12 @@ export default function filter({
               </button>
               {showSort && (
                 <div className="absolute top-full left-0 right-0 lg:left-0 mt-2 bg-[#0F0F0F] border border-solid border-[#BABABA] rounded-[15px] z-50 max-h-64 overflow-y-auto">
-                  {["Featured", "Title (A-Z)", "Rating (High-Low)", "Price (Low-High)"].map((option) => (
+                  {[
+                    "Featured",
+                    "Title (A-Z)",
+                    "Rating (High-Low)",
+                    "Price (Low-High)",
+                  ].map((option) => (
                     <button
                       key={option}
                       onClick={() => {
