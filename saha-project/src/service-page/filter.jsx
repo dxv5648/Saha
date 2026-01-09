@@ -1,7 +1,16 @@
 import { useState } from "react";
 
-export default function filter() {
-  const [input1, setInput1] = useState("");
+export default function filter({
+  searchQuery = "",
+  onSearchChange = () => {},
+  selectedCategory = "All Categories",
+  categories = ["All Categories"],
+  onCategoryChange = () => {},
+  sortBy = "Featured",
+  onSortChange = () => {},
+}) {
+  const [showCategories, setShowCategories] = useState(false);
+  const [showSort, setShowSort] = useState(false);
 
   return (
     <div
@@ -65,8 +74,8 @@ export default function filter() {
               />
               <input
                 placeholder={"Search for plumbers, electricians..."}
-                value={input1}
-                onChange={(event) => setInput1(event.target.value)}
+                value={searchQuery}
+                onChange={(event) => onSearchChange(event.target.value)}
                 className="flex-1 self-stretch text-white bg-transparent border-0 outline-none placeholder-gray-400"
                 style={{
                   fontSize: "clamp(0.75rem, 1.5vw, 1rem)",
@@ -74,52 +83,98 @@ export default function filter() {
                 }}
               />
             </div>
-            <button
-              className="flex items-center bg-[#0F0F0F] text-left rounded-[25px] border border-solid border-[#BABABA] cursor-pointer hover:bg-[#1a1a1a] w-full lg:w-auto justify-between"
-              style={{
-                fontSize: "clamp(0.875rem, 1.8vw, 1.125rem)",
-                padding: "clamp(14px, 2vw, 17px) clamp(15px, 2vw, 18px)",
-                gap: "clamp(20px, 5vw, 99px)",
-              }}
-              onClick={() => alert("Pressed!")}
-            >
-              <span className="text-white whitespace-nowrap">
-                {"All Categories"}
-              </span>
-              <img
-                src={
-                  "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/L7hCOf5rCg/2fqviavt_expires_30_days.png"
-                }
-                className="object-fill flex-shrink-0"
+            <div className="relative w-full lg:w-auto">
+              <button
+                className="flex items-center bg-[#0F0F0F] text-left rounded-[25px] border border-solid border-[#BABABA] cursor-pointer hover:bg-[#1a1a1a] w-full lg:w-auto justify-between"
                 style={{
-                  width: "clamp(20px, 2.5vw, 25px)",
-                  height: "clamp(14px, 1.7vw, 17px)",
+                  fontSize: "clamp(0.875rem, 1.8vw, 1.125rem)",
+                  padding: "clamp(14px, 2vw, 17px) clamp(15px, 2vw, 18px)",
+                  gap: "clamp(20px, 5vw, 99px)",
                 }}
-              />
-            </button>
-            <button
-              className="flex items-center bg-[#0F0F0F] text-left rounded-[25px] border border-solid border-[#BABABA] cursor-pointer hover:bg-[#1a1a1a] w-full lg:w-auto justify-between"
-              style={{
-                fontSize: "clamp(0.875rem, 1.8vw, 1.125rem)",
-                padding: "clamp(14px, 2vw, 17px) clamp(15px, 2vw, 22px)",
-                gap: "clamp(20px, 4vw, 67px)",
-              }}
-              onClick={() => alert("Pressed!")}
-            >
-              <span className="text-white whitespace-nowrap">
-                {"Sort By: Featured"}
-              </span>
-              <img
-                src={
-                  "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/L7hCOf5rCg/fnh78bg4_expires_30_days.png"
-                }
-                className="object-fill flex-shrink-0"
+                onClick={() => setShowCategories(!showCategories)}
+              >
+                <span className="text-white whitespace-nowrap">
+                  {selectedCategory}
+                </span>
+                <img
+                  src={
+                    "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/L7hCOf5rCg/2fqviavt_expires_30_days.png"
+                  }
+                  className="object-fill flex-shrink-0"
+                  style={{
+                    width: "clamp(20px, 2.5vw, 25px)",
+                    height: "clamp(14px, 1.7vw, 17px)",
+                  }}
+                />
+              </button>
+              {showCategories && (
+                <div className="absolute top-full left-0 right-0 lg:left-0 mt-2 bg-[#0F0F0F] border border-solid border-[#BABABA] rounded-[15px] z-50 max-h-64 overflow-y-auto">
+                  {categories.map((category) => (
+                    <button
+                      key={category}
+                      onClick={() => {
+                        onCategoryChange(category);
+                        setShowCategories(false);
+                      }}
+                      className={`block w-full text-left px-4 py-3 hover:bg-[#1a1a1a] ${
+                        selectedCategory === category ? "bg-[#1a1a1a]" : ""
+                      }`}
+                      style={{
+                        fontSize: "clamp(0.875rem, 1.8vw, 1.125rem)",
+                      }}
+                    >
+                      <span className="text-white">{category}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="relative w-full lg:w-auto">
+              <button
+                className="flex items-center bg-[#0F0F0F] text-left rounded-[25px] border border-solid border-[#BABABA] cursor-pointer hover:bg-[#1a1a1a] w-full lg:w-auto justify-between"
                 style={{
-                  width: "clamp(20px, 2.5vw, 25px)",
-                  height: "clamp(14px, 1.7vw, 17px)",
+                  fontSize: "clamp(0.875rem, 1.8vw, 1.125rem)",
+                  padding: "clamp(14px, 2vw, 17px) clamp(15px, 2vw, 22px)",
+                  gap: "clamp(20px, 4vw, 67px)",
                 }}
-              />
-            </button>
+                onClick={() => setShowSort(!showSort)}
+              >
+                <span className="text-white whitespace-nowrap">
+                  {`Sort By: ${sortBy}`}
+                </span>
+                <img
+                  src={
+                    "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/L7hCOf5rCg/fnh78bg4_expires_30_days.png"
+                  }
+                  className="object-fill flex-shrink-0"
+                  style={{
+                    width: "clamp(20px, 2.5vw, 25px)",
+                    height: "clamp(14px, 1.7vw, 17px)",
+                  }}
+                />
+              </button>
+              {showSort && (
+                <div className="absolute top-full left-0 right-0 lg:left-0 mt-2 bg-[#0F0F0F] border border-solid border-[#BABABA] rounded-[15px] z-50 max-h-64 overflow-y-auto">
+                  {["Featured", "Title (A-Z)", "Rating (High-Low)", "Price (Low-High)"].map((option) => (
+                    <button
+                      key={option}
+                      onClick={() => {
+                        onSortChange(option);
+                        setShowSort(false);
+                      }}
+                      className={`block w-full text-left px-4 py-3 hover:bg-[#1a1a1a] ${
+                        sortBy === option ? "bg-[#1a1a1a]" : ""
+                      }`}
+                      style={{
+                        fontSize: "clamp(0.875rem, 1.8vw, 1.125rem)",
+                      }}
+                    >
+                      <span className="text-white">{option}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
