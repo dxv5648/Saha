@@ -6,21 +6,21 @@ export default function RecentServices() {
         style={{ padding: "clamp(20px, 3vw, 30px)" }}
       >
         <span
-          className="text-white mb-5"
+          className="text-white mb-5 inter-semi-bold"
           style={{ fontSize: "clamp(1rem, 2vw, 1.125rem)" }}
         >
           {"Recent Bookings"}
         </span>
         <div
-          className="flex items-center bg-[#1C1C1CB0] w-full mb-[39px] rounded-[20px] border border-solid border-[#434343]"
+          className="flex items-center bg-[#1C1C1CB0] w-full mb-9.75 rounded-[20px] border border-solid border-[#434343]"
           style={{
             padding: "clamp(10px, 2vw, 16px)",
             gap: "clamp(8px, 1.5vw, 11px)",
           }}
         >
-          <div className="flex flex-col items-start flex-grow">
+          <div className="flex flex-col items-start grow inter-regular">
             <span
-              className="text-white mb-[9px]"
+              className="text-white mb-2.25"
               style={{ fontSize: "clamp(0.75rem, 1.5vw, 0.875rem)" }}
             >
               {"Master Electrician"}
@@ -44,7 +44,7 @@ export default function RecentServices() {
           </div>
         </div>
         <span
-          className="text-[#D1D1D1] text-center w-full mb-[47px]"
+          className="text-[#D1D1D1] text-center inter-regular w-full mb-11.75"
           style={{ fontSize: "clamp(0.75rem, 1.5vw, 0.875rem)" }}
         >
           {"No more recent booking to display"}
