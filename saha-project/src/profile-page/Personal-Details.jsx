@@ -6,11 +6,11 @@ export default function PersonalDetails() {
   const [email, setEmail] = useState("john.williams@example.com");
   return (
     <div
-      className="flex flex-col items-start bg-[#161616F0] rounded-[40px] w-full max-w-[600px] mx-auto"
+      className="flex flex-col items-start bg-[#161616F0] rounded-[40px] w-full max-w-150 mx-auto inter-regular"
       style={{ padding: "clamp(20px, 3vw, 30px)" }}
     >
       <span
-        className="text-white mb-[3px]"
+        className="text-white mb-0.75 inter-semi-bold"
         style={{
           fontSize: "clamp(1rem, 2vw, 1.125rem)",
           marginTop: "clamp(7px, 1.5vw, 7px)",
@@ -28,7 +28,7 @@ export default function PersonalDetails() {
       <select
         value={timezone}
         onChange={(e) => setTimezone(e.target.value)}
-        className="bg-[#1C1C1CB0] text-[#D1D1D1] w-full mb-[13px] rounded-[10px] border border-solid border-[#434343] outline-none focus:border-[#666] cursor-pointer"
+        className="bg-[#1C1C1CB0] text-[#D1D1D1] w-full mb-3.25 rounded-[10px] border border-solid border-[#434343] outline-none focus:border-[#666] cursor-pointer"
         style={{
           fontSize: "clamp(0.75rem, 1.5vw, 0.875rem)",
           padding: "clamp(12px, 2vw, 15px)",
@@ -54,7 +54,7 @@ export default function PersonalDetails() {
         type="text"
         value={name}
         onChange={(e) => setName(e.target.value)}
-        className="bg-[#1C1C1CB0] text-[#D1D1D1] w-full mb-[13px] rounded-[10px] border border-solid border-[#434343] outline-none focus:border-[#666]"
+        className="bg-[#1C1C1CB0] text-[#D1D1D1] w-full mb-3.25 rounded-[10px] border border-solid border-[#434343] outline-none focus:border-[#666]"
         style={{
           fontSize: "clamp(0.75rem, 1.5vw, 0.875rem)",
           padding: "clamp(12px, 2vw, 15px)",

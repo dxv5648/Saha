@@ -3,11 +3,11 @@ import Electrician from "../assets/Electrician.jpg";
 export default function FavouriteServices() {
   return (
     <div
-      className="flex flex-col items-center bg-[#161616F0] rounded-[40px] w-full"
+      className="flex flex-col items-center bg-[#161616F0] rounded-[40px] w-full inter-regular"
       style={{ padding: "clamp(20px, 3vw, 24px)" }}
     >
       <span
-        className="text-white mb-[39px]"
+        className="text-white mb-9.75 poppins-bold"
         style={{
           fontSize: "clamp(1.5rem, 4vw, 1.875rem)",
           marginTop: "clamp(20px, 3vw, 42px)",
@@ -16,7 +16,7 @@ export default function FavouriteServices() {
         {"Favourite Services"}
       </span>
       <div
-        className="flex flex-col sm:flex-row items-start w-full justify-center mb-[61px]"
+        className="flex flex-col sm:flex-row items-start w-full justify-center mb-15.25"
         style={{ gap: "clamp(15px, 2.5vw, 20px)" }}
       >
         <div
