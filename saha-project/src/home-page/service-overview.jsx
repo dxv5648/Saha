@@ -17,7 +17,7 @@ export default function ServiceOverview() {
         }}
       >
         <Link
-          //href="/services/home"
+          to="/Service-Expand"
           className="flex flex-col items-center bg-[#0F0F0FB5] text-left rounded-[20px] border-0 cursor-pointer hover:bg-[#1a1a1a] transition-colors"
           style={{
             padding: "clamp(40px, 6vw, 68px) clamp(30px, 5vw, 65px)",
