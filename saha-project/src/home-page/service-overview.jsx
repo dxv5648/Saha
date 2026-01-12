@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 
 export default function ServiceOverview() {
   return (
-    <div className="flex flex-col items-center mb-[132px] w-full px-[10vw]">
+    <div className="flex flex-col items-center mb-33 w-full px-[10vw]">
       <span
         className="text-white inter-semi-bold mt-36 mb-18"
         style={{ fontSize: "clamp(1.5rem, 4vw, 1.875rem)" }}
@@ -10,7 +10,7 @@ export default function ServiceOverview() {
         {"Services"}
       </span>
       <div
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 w-full max-w-[1200px]"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 w-full max-w-300"
         style={{
           gap: "clamp(30px, 5vw, 58px)",
           marginBottom: "clamp(30px, 4vw, 50px)",

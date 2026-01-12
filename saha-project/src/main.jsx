@@ -6,6 +6,7 @@ import Home from "./home-page/home.jsx";
 import Profile from "./profile-page/profile.jsx";
 import Service from "./service-page/service.jsx";
 import ServiceExpand from "./service-expand-page/service-expand.jsx";
+import Cart from "./cart/cart.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -15,6 +16,7 @@ createRoot(document.getElementById("root")).render(
         <Route path="/Profile" element={<Profile />} />
         <Route path="/Service" element={<Service />} />
         <Route path="/Service-Expand" element={<ServiceExpand />} />
+        <Route path="/Cart" element={<Cart />} />
       </Routes>
     </BrowserRouter>
   </StrictMode>
