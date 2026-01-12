@@ -23,18 +23,8 @@ export default function Header() {
   return (
     <div className="bg-[#0F0F0F#0F0F0F] text-white w-full py-4 inter-regular">
       <div className="mx-[10%] flex justify-evenly items-center">
-        <button
-          onClick={() => handleScrollTo("about")}
-          className="hover:text-gray-300"
-        >
-          About
-        </button>
-
         <Link to="/Service" className="hover:text-gray-300">
           <button>Services</button>
-        </Link>
-        <Link to="/">
-          <button className="text-4xl inter-semi-bold mx-[20%]">saha.</button>
         </Link>
         <button
           onClick={() => handleScrollTo("contact")}
@@ -42,6 +32,9 @@ export default function Header() {
         >
           Contact
         </button>
+        <Link to="/">
+          <button className="text-4xl inter-semi-bold mx-[20%]">saha.</button>
+        </Link>
         {isLoggedIn ? (
           <Link to="/Profile" className="hover:text-gray-300">
             <button>Profile</button>
@@ -51,6 +44,9 @@ export default function Header() {
             Login
           </button>
         )}
+        <Link to="/cart" className="hover:text-gray-300">
+          <button>Cart</button>
+        </Link>
       </div>
     </div>
   );
