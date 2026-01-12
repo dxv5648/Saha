@@ -28,13 +28,13 @@ function Body() {
           <ServiceExpandHeader />
         </div>
         <div className="flex justify-center px-4">
-          <div className="w-full max-w-[1200px] flex flex-col">
+          <div className="w-full max-w-300 flex flex-col">
             <AboutService />
             <ServiceType />
           </div>
         </div>
         <div className="flex justify-center px-4 mt-8">
-          <div className="w-full max-w-[1200px] flex gap-8">
+          <div className="w-full max-w-300 flex gap-8">
             <div className="flex-1">
               <Review />
             </div>
@@ -44,7 +44,7 @@ function Body() {
           </div>
         </div>
         <div className="flex justify-center px-4 mt-8 mb-12">
-          <div className="w-full max-w-[1200px] flex flex-col">
+          <div className="w-full max-w-300 flex flex-col">
             <OtherServices />
           </div>
         </div>

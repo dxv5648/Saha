@@ -18,7 +18,7 @@ export default function ServiceType() {
             <span className="text-[#D1D1D1] text-lg">{service.price}</span>
           </div>
           {index < services.length - 1 && (
-            <div className="w-full bg-[#353535] h-[1px] mb-4"></div>
+            <div className="w-full bg-[#353535] h-px mb-4"></div>
           )}
         </div>
       ))}
