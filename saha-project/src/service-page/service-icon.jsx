@@ -1,7 +1,10 @@
+import { useNavigate } from "react-router-dom";
 import WorkImage from "../assets/Work-imgae.png";
 
 export default function ServiceIcon({ service = {} }) {
+  const navigate = useNavigate();
   const {
+    id = 1,
     name = "Master Electrician",
     provider = "John Williams",
     category = "Electrical",
@@ -9,6 +12,10 @@ export default function ServiceIcon({ service = {} }) {
     reviews = 158,
     priceRange = "$80-150/hr",
   } = service;
+
+  const handleBookNow = () => {
+    navigate(`/service/${id}`);
+  };
 
   return (
     <div
@@ -109,7 +116,7 @@ export default function ServiceIcon({ service = {} }) {
               padding: "clamp(14px, 2vw, 18px)",
               marginBottom: "clamp(16px, 2vw, 20px)",
             }}
-            onClick={() => alert("Pressed!")}
+            onClick={handleBookNow}
           >
             {"Book Now"}
           </button>

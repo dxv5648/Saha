@@ -1,3 +1,4 @@
+import { useParams } from "react-router-dom";
 import Footer from "../home-page/Footer.jsx";
 import Header from "../home-page/Header.jsx";
 import Background from "../home-page/Background.jsx";
@@ -7,6 +8,7 @@ import ServiceType from "./service-type.jsx";
 import OtherServices from "./other-services.jsx";
 import ServiceBook from "./service-book.jsx";
 import Review from "./reviews.jsx";
+import { SERVICES_DATA } from "../service-page/service-db-temp.jsx";
 
 export default function Profile() {
   return (
@@ -19,6 +21,11 @@ export default function Profile() {
 }
 
 function Body() {
+  const { serviceId } = useParams();
+  const currentService = SERVICES_DATA.find(
+    (s) => s.id === parseInt(serviceId)
+  );
+
   return (
     <div className="w-full relative">
       <Background />
@@ -45,7 +52,10 @@ function Body() {
         </div>
         <div className="flex justify-center px-4 mt-8 mb-12">
           <div className="w-full max-w-300 flex flex-col">
-            <OtherServices />
+            <OtherServices
+              currentServiceId={parseInt(serviceId)}
+              currentCategory={currentService?.category}
+            />
           </div>
         </div>
       </div>
