@@ -28,7 +28,7 @@ export default function ServiceBook() {
       >
         {"Add to Favorites"}
       </button>
-      <div className="w-full bg-[#353535] h-[1px] mb-4"></div>
+      <div className="w-full bg-[#353535] h-px mb-4"></div>
       <div className="flex justify-between w-full text-[#D1D1D1] text-sm">
         <span>{"Response time"}</span>
         <span>{"Within 1 hour"}</span>

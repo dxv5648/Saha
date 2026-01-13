@@ -46,7 +46,7 @@ export default function Review() {
             <span className="text-[#D1D1D1] text-sm">{review.text}</span>
           </div>
           {index < reviews.length - 1 && (
-            <div className="w-full bg-[#353535] h-[1px] mb-4"></div>
+            <div className="w-full bg-[#353535] h-px mb-4"></div>
           )}
         </div>
       ))}
