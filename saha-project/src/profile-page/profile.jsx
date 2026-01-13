@@ -1,6 +1,6 @@
+import { useState } from "react";
 import Footer from "../home-page/Footer.jsx";
 import Header from "../home-page/Header.jsx";
-import skyline from "../assets/Auckland-Skyline-Dark.jpg";
 import ProfileHeader from "./profile-header.jsx";
 import RecentServices from "./recent-services.jsx";
 import FavouriteServices from "./favourite-services.jsx";
@@ -19,6 +19,8 @@ export default function Profile() {
 }
 
 function Body() {
+  const [activeTab, setActiveTab] = useState("overview");
+
   return (
     <div className="w-full relative">
       <Background />
@@ -26,23 +28,88 @@ function Body() {
       <div className="relative inset-0 z-10 flex flex-col">
         <ProfileHeader />
 
-        <div className="flex flex-col lg:flex-row gap-6 px-12 py-8">
-          <div className="flex-1">
-            <RecentServices />
-          </div>
-          <div className="flex-1">
-            <PaymentMethods />
+        {/* Tab Navigation */}
+        <div className="flex justify-center px-4 mt-4 mb-8">
+          <div className="flex gap-4 bg-[#161616F0] rounded-[30px] p-2">
+            {[
+              { id: "overview", label: "Overview" },
+              { id: "bookings", label: "My Bookings" },
+              { id: "favorites", label: "Favorites" },
+              { id: "payment", label: "Payment" },
+              { id: "settings", label: "Settings" },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-6 py-2 rounded-[20px] font-medium transition-all ${
+                  activeTab === tab.id
+                    ? "bg-white text-black"
+                    : "text-[#D1D1D1] hover:text-white"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-6 px-12 py-8">
-          <div className="flex-1">
-            <FavouriteServices />
+        {/* Overview Tab */}
+        {activeTab === "overview" && (
+          <div className="space-y-8 px-4 pb-12">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-7xl mx-auto">
+              <div className="h-full">
+                <RecentServices />
+              </div>
+              <div className="h-full">
+                <PaymentMethods />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-7xl mx-auto">
+              <div className="h-full">
+                <FavouriteServices />
+              </div>
+              <div className="h-full">
+                <PersonalDetails />
+              </div>
+            </div>
           </div>
-          <div className="flex-1">
-            <PersonalDetails />
+        )}
+
+        {/* Bookings Tab */}
+        {activeTab === "bookings" && (
+          <div className="flex justify-center px-4 pb-12">
+            <div className="w-full max-w-4xl">
+              <RecentServices />
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Favorites Tab */}
+        {activeTab === "favorites" && (
+          <div className="flex justify-center px-4 pb-12">
+            <div className="w-full max-w-4xl">
+              <FavouriteServices />
+            </div>
+          </div>
+        )}
+
+        {/* Payment Tab */}
+        {activeTab === "payment" && (
+          <div className="flex justify-center px-4 pb-12">
+            <div className="w-full max-w-4xl">
+              <PaymentMethods />
+            </div>
+          </div>
+        )}
+
+        {/* Settings Tab */}
+        {activeTab === "settings" && (
+          <div className="flex justify-center px-4 pb-12">
+            <div className="w-full max-w-4xl">
+              <PersonalDetails />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
