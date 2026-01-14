@@ -1,8 +1,8 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import About from "./about.jsx";
-import Footer from "./Footer.jsx";
-import Header from "./Header.jsx";
+import Footer from "./footer.jsx";
+import Header from "./header.jsx";
 import AI from "./ai-search.jsx";
 import ServiceOverview from "./service-overview.jsx";
 import Contact from "./contact.jsx";

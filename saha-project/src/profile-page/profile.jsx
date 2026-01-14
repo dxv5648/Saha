@@ -1,12 +1,12 @@
 import { useState } from "react";
-import Footer from "../home-page/Footer.jsx";
-import Header from "../home-page/Header.jsx";
+import Footer from "../home-page/footer.jsx";
+import Header from "../home-page/header.jsx";
 import ProfileHeader from "./profile-header.jsx";
 import RecentServices from "./recent-services.jsx";
 import FavouriteServices from "./favourite-services.jsx";
 import PaymentMethods from "./payment-method.jsx";
 import PersonalDetails from "./Personal-Details.jsx";
-import Background from "../home-page/Background.jsx";
+import Background from "../home-page/background.jsx";
 
 export default function Profile() {
   return (

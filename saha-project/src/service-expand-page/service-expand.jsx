@@ -1,7 +1,7 @@
 import { useParams } from "react-router-dom";
-import Footer from "../home-page/Footer.jsx";
-import Header from "../home-page/Header.jsx";
-import Background from "../home-page/Background.jsx";
+import Footer from "../home-page/footer.jsx";
+import Header from "../home-page/header.jsx";
+import Background from "../home-page/background.jsx";
 import ServiceExpandHeader from "./service-expand-heading.jsx";
 import AboutService from "./about-service.jsx";
 import ServiceType from "./service-type.jsx";

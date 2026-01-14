@@ -1,9 +1,9 @@
 import { useState, useMemo } from "react";
-import Footer from "../home-page/Footer.jsx";
-import Header from "../home-page/Header.jsx";
+import Footer from "../home-page/footer.jsx";
+import Header from "../home-page/header.jsx";
 import Filter from "./filter.jsx";
 import ServiceIcon from "./service-icon.jsx";
-import Background from "../home-page/Background.jsx";
+import Background from "../home-page/background.jsx";
 import { SERVICES_DATA } from "./service-db-temp.jsx";
 
 const SERVICES_PER_PAGE = 9;
