@@ -91,6 +91,10 @@ export default function ServicePost() {
     const serviceListArray = services.map((s) => s.service_list.trim());
     const servicePriceArray = services.map((s) => parseFloat(s.service_price));
 
+    // Generate random rating (between 4.0 and 5.0) and reviews (between 50 and 300)
+    const rating = (Math.random() * 1.0 + 4.0).toFixed(1);
+    const reviews = Math.floor(Math.random() * 251 + 50);
+
     const newServiceData = {
       name: name.trim(),
       provider: provider.trim(),
@@ -98,6 +102,8 @@ export default function ServicePost() {
       description: description.trim(),
       service_list: serviceListArray.join(","),
       service_price: servicePriceArray.join(","),
+      rating: parseFloat(rating),
+      reviews: reviews,
     };
 
     const { data, error } = await supabase
