@@ -1,12 +1,13 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import About from "./about.jsx";
-import Footer from "./Footer.jsx";
-import Header from "./Header.jsx";
+import Footer from "./footer.jsx";
+import Header from "./header.jsx";
 import AI from "./ai-search.jsx";
 import ServiceOverview from "./service-overview.jsx";
 import Contact from "./contact.jsx";
 import Background from "./background.jsx";
+import ServicePost from "../service-page/service-post.jsx";
 
 export default function Home() {
   const location = useLocation();
@@ -26,6 +27,7 @@ export default function Home() {
       <Header />
       <Body />
       <Footer className="mt-auto" />
+      <ServicePost />
     </div>
   );
 }

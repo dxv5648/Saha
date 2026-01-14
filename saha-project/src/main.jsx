@@ -15,6 +15,7 @@ createRoot(document.getElementById("root")).render(
         <Route exact path="/" element={<Home />} />
         <Route path="/Profile" element={<Profile />} />
         <Route path="/Service" element={<Service />} />
+        <Route path="/service/:serviceId" element={<ServiceExpand />} />
         <Route path="/Service-Expand" element={<ServiceExpand />} />
         <Route path="/Cart" element={<Cart />} />
       </Routes>

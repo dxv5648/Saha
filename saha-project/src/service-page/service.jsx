@@ -1,10 +1,10 @@
-import { useState, useMemo } from "react";
-import Footer from "../home-page/Footer.jsx";
-import Header from "../home-page/Header.jsx";
+import { useState, useMemo, useEffect } from "react";
+import Footer from "../home-page/footer.jsx";
+import Header from "../home-page/header.jsx";
 import Filter from "./filter.jsx";
 import ServiceIcon from "./service-icon.jsx";
-import Background from "../home-page/Background.jsx";
-import { SERVICES_DATA } from "./service-db-temp.jsx";
+import Background from "../home-page/background.jsx";
+import supabase from "../supabase-client";
 
 const SERVICES_PER_PAGE = 9;
 
@@ -23,14 +23,70 @@ function Body() {
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState("Featured");
+  const [supabaseServices, setSupabaseServices] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch services from Supabase
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("Services")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        if (error) {
+          console.error("Error fetching services:", error);
+        } else {
+          // Transform Supabase data to match expected format
+          const transformedServices = data.map((service, index) => {
+            // Calculate priceRange from service_price if available
+            let priceRange = "$50-100/hr"; // default
+            if (service.service_price) {
+              const prices = service.service_price.split(",").map((p) => parseFloat(p.trim())).filter((p) => !isNaN(p));
+              if (prices.length > 0) {
+                const minPrice = Math.round(Math.min(...prices));
+                const maxPrice = Math.round(Math.max(...prices));
+                priceRange = minPrice === maxPrice 
+                  ? `$${minPrice}/hr` 
+                  : `$${minPrice}-${maxPrice}/hr`;
+              }
+            }
+            
+            return {
+              id: service.id || `supabase-${index}`,
+              name: service.name,
+              provider: service.provider,
+              category: service.category,
+              rating: service.rating || 4.5,
+              reviews: service.reviews || 100,
+              priceRange: priceRange,
+            };
+          });
+          setSupabaseServices(transformedServices);
+        }
+      } catch (error) {
+        console.error("Error fetching services:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchServices();
+  }, []);
+
+  // Use only Supabase services
+  const allServices = useMemo(() => {
+    return supabaseServices;
+  }, [supabaseServices]);
 
   const categories = [
     "All Categories",
-    ...new Set(SERVICES_DATA.map((s) => s.category)),
+    ...new Set(allServices.map((s) => s.category)),
   ];
 
   const filteredServices = useMemo(() => {
-    let services = SERVICES_DATA.filter((service) => {
+    let services = allServices.filter((service) => {
       const matchesSearch =
         service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         service.provider.toLowerCase().includes(searchQuery.toLowerCase());
@@ -54,7 +110,7 @@ function Body() {
     }
 
     return services;
-  }, [searchQuery, selectedCategory, sortBy]);
+  }, [searchQuery, selectedCategory, sortBy, allServices]);
 
   const totalPages = Math.ceil(filteredServices.length / SERVICES_PER_PAGE);
   const startIndex = (currentPage - 1) * SERVICES_PER_PAGE;
