@@ -2,5 +2,8 @@
   "dependencies": {
     "@tailwindcss/vite": "^4.1.18",
     "tailwindcss": "^4.1.18"
+  },
+  "optionalDependencies": {
+    "lightningcss-darwin-x64": "^1.30.2"
   }
 }
