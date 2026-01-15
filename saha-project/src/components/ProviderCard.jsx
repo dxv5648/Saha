@@ -17,7 +17,7 @@ export default function ProviderCard({ provider }) {
       "
     >
       {/* ───────── Header (fixed) ───────── */}
-      <div className="h-[260px] flex flex-col items-center justify-end pb-6">
+      <div className="h-[280px] flex flex-col items-center justify-end pb-6">
         <img
           src={provider.avatar}
           alt={provider.name}
