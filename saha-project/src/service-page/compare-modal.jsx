@@ -31,50 +31,66 @@ export default function CompareModal({ services = [], onClose = () => {} }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
-      <div className="bg-[#1a1a1a] rounded-[30px] w-full max-w-7xl max-h-[90vh] overflow-auto m-4">
+      <div className="bg-[#1a1a1a] rounded-[30px] w-full max-w-6xl max-h-[90vh] overflow-auto m-4">
         {/* Header */}
-        <div className="bg-[#2a2a2a] rounded-t-[30px] px-8 py-6">
-          <div className="flex justify-between items-start mb-2">
-            <div>
-              <h2 className="text-white text-3xl poppins-bold mb-2">
-                Compare Service Providers
-              </h2>
-              <p className="text-white text-sm inter-regular opacity-80">
-                Comparing {services.length} selected service{services.length > 1 ? "s" : ""}
-              </p>
-            </div>
-            <button
-              onClick={onClose}
-              className="text-white hover:text-gray-300 text-2xl font-bold w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#3a3a3a] transition-colors"
-            >
-              ×
-            </button>
+        <div className="flex justify-center py-6 relative">
+          <div className="bg-[#2a2a2a]/80 backdrop-blur px-10 py-6 rounded-2xl text-center min-w-[360px]">
+            <h1 className="text-2xl font-semibold text-white poppins-bold">
+              Compare Service Providers
+            </h1>
+            <p className="mt-2 text-sm text-[#BABABA] inter-regular">
+              Comparing {services.length} selected service{services.length > 1 ? "s" : ""}
+            </p>
           </div>
+          <button
+            onClick={onClose}
+            className="absolute top-6 right-6 text-white hover:text-gray-300 text-2xl font-bold w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#3a3a3a] transition-colors"
+          >
+            ×
+          </button>
         </div>
 
         {/* Comparison Content */}
-        <div className="p-8">
-          <div className="flex gap-8">
-            {/* Left Column - Labels */}
-            <div className="flex flex-col gap-8 pt-24 min-w-[140px]">
-              <div className="text-white inter-semi-bold" style={{
-                fontSize: "clamp(0.875rem, 1.5vw, 1rem)",
-              }}>Rating</div>
-              <div className="text-white inter-semi-bold" style={{
-                fontSize: "clamp(0.875rem, 1.5vw, 1rem)",
-              }}>Hourly Rate</div>
-              <div className="text-white inter-semi-bold" style={{
-                fontSize: "clamp(0.875rem, 1.5vw, 1rem)",
-              }}>Availability</div>
-            </div>
+        <div className="px-10 pb-10">
+          <div className="bg-[#161616]/60 rounded-3xl p-10">
+            <div className="grid grid-cols-[160px_1fr] gap-8 items-start">
+              {/* Left Column - Labels */}
+              <div className="flex flex-col text-sm text-white items-start">
+                {/* Header spacer */}
+                <div className="h-[250px]" />
 
-            {/* Right Column - Service Cards */}
-            <div className="flex gap-6 flex-1 overflow-x-auto pb-4">
-              {services.map((service) => (
-                <div
-                  key={service.id}
-                  className="flex-shrink-0 w-full max-w-[280px] bg-[#161616] rounded-[20px] p-6 relative flex flex-col"
-                >
+                {/* Rating - aligned with stars */}
+                <div className="h-[160px] flex items-center justify-end w-full">
+                  <span className="inter-semi-bold">Rating</span>
+                </div>
+
+                {/* Divider */}
+                <div className="w-[100px] h-px bg-[#434343]/20 mt-4 -translate-y-5 ml-auto" />
+
+                {/* Hourly Rate - aligned with price */}
+                <div className="h-[90px] flex items-center justify-end w-full">
+                  <span className="inter-semi-bold">Hourly Rate</span>
+                </div>
+
+                {/* Divider */}
+                <div className="w-[100px] h-px bg-[#434343]/20 mt-4 -translate-y-1 ml-auto" />
+
+                {/* Availability - aligned with green button */}
+                <div className="h-[180px] flex items-center justify-end w-full -mt-7">
+                  <span className="inter-semi-bold">Availability</span>
+                </div>
+
+                {/* Action spacer */}
+                <div className="h-[135px]" />
+              </div>
+
+              {/* Right Column - Service Cards */}
+              <div className={`grid gap-6 ${services.length === 1 ? 'grid-cols-1' : services.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
+                {services.map((service) => (
+                  <div
+                    key={service.id}
+                    className="bg-[#161616] rounded-[20px] p-6 relative flex flex-col"
+                  >
                   {/* Remove Button */}
                   <button
                     onClick={(e) => handleRemoveService(service.id, e)}
@@ -84,15 +100,15 @@ export default function CompareModal({ services = [], onClose = () => {} }) {
                   </button>
 
                   {/* Profile Image */}
-                  <div className="flex justify-center mb-4 mt-2">
+                  <div className="flex justify-center mb-4">
                     <div className="relative">
                       <img
                         src={Face}
                         alt={service.provider}
-                        className="object-cover rounded-full border-2 border-[#2a2a2a]"
+                        className="object-cover rounded-full"
                         style={{
-                          width: "clamp(90px, 12vw, 130px)",
-                          height: "clamp(90px, 12vw, 130px)",
+                          width: "clamp(100px, 12vw, 140px)",
+                          height: "clamp(100px, 12vw, 140px)",
                         }}
                       />
                     </div>
@@ -112,55 +128,75 @@ export default function CompareModal({ services = [], onClose = () => {} }) {
                     {service.name}
                   </p>
 
-                  {/* Rating */}
-                  <div className="flex items-center justify-center gap-2 mb-5">
-                    <div className="flex gap-0.5">
-                      {[...Array(5)].map((_, i) => (
-                        <span
-                          key={i}
-                          className="text-yellow-400"
-                          style={{ fontSize: "clamp(1rem, 1.5vw, 1.25rem)" }}
-                        >
-                          ★
-                        </span>
-                      ))}
+                  {/* Divider above Rating */}
+                  <div className="w-full h-px bg-[#434343]/20 mb-4 -translate-y-1" />
+
+                  {/* Rating Section - aligned with left label */}
+                  <div className="h-[100px] flex items-center justify-center">
+                    {/* Stars and Rating on same line */}
+                    <div className="flex items-center gap-2">
+                      <div className="flex gap-0.5">
+                        {[...Array(5)].map((_, i) => (
+                          <span
+                            key={i}
+                            className="text-yellow-400"
+                            style={{ fontSize: "clamp(1.125rem, 1.5vw, 1.375rem)" }}
+                          >
+                            ★
+                          </span>
+                        ))}
+                      </div>
+                      <span className="text-white inter-regular" style={{
+                        fontSize: "clamp(0.875rem, 1.5vw, 1rem)",
+                      }}>
+                        {service.rating}/5
+                      </span>
                     </div>
-                    <span className="text-white inter-regular" style={{
-                      fontSize: "clamp(0.875rem, 1.5vw, 1rem)",
+                  </div>
+
+                  {/* Divider below Rating */}
+                  <div className="w-full h-px bg-[#434343]/20 mt-4 translate-y" />
+
+                  {/* Hourly Rate Section - aligned with left label */}
+                  <div className="h-[140px] flex items-center justify-center">
+                    <div className="text-white text-center inter-semi-bold" style={{
+                      fontSize: "clamp(1.125rem, 2vw, 1.375rem)",
                     }}>
-                      {service.rating}/5
-                    </span>
+                      {getHourlyRate(service.priceRange)} /hr
+                    </div>
                   </div>
 
-                  {/* Hourly Rate */}
-                  <div className="text-white text-center inter-semi-bold mb-5" style={{
-                    fontSize: "clamp(1rem, 2vw, 1.125rem)",
-                  }}>
-                    {getHourlyRate(service.priceRange)} /hr
-                  </div>
+                  {/* Divider above Availability */}
+                  <div className="w-full h-px bg-[#434343]/20 mt-4 -translate-y-7" />
 
-                  {/* Availability */}
-                  <div className="flex justify-center mb-6">
-                    <div className="bg-green-600 text-white rounded-[10px] px-4 py-2 inter-regular" style={{
-                      fontSize: "clamp(0.75rem, 1.2vw, 0.875rem)",
+                  {/* Availability Section - aligned with left label */}
+                  <div className="h-[60px] flex items-center justify-center">
+                    <div className="bg-green-600 text-white rounded-[10px] px-6 py-3 inter-regular" style={{
+                      fontSize: "clamp(0.875rem, 1.5vw, 1rem)",
                     }}>
                       Available Tomorrow
                     </div>
                   </div>
 
+                  {/* Divider below Availability */}
+                  <div className="w-full h-px bg-[#434343]/20 mt-4 translate-y-6" />
+
                   {/* Book Now Button */}
-                  <button
-                    onClick={() => handleBookNow(service.id)}
-                    className="bg-white hover:bg-gray-100 text-black text-center rounded-[15px] border-0 cursor-pointer w-full font-semibold transition-all duration-300 active:scale-95 mt-auto"
-                    style={{
-                      fontSize: "clamp(0.875rem, 1.5vw, 1rem)",
-                      padding: "clamp(12px, 2vw, 16px)",
-                    }}
-                  >
-                    Book Now
-                  </button>
-                </div>
-              ))}
+                  <div className="h-[135px] flex items-end">
+                    <button
+                      onClick={() => handleBookNow(service.id)}
+                      className="bg-white hover:bg-gray-100 text-black text-center rounded-[15px] border-0 cursor-pointer w-full font-semibold transition-all duration-300 active:scale-95"
+                      style={{
+                        fontSize: "clamp(0.75rem, 1.2vw, 0.875rem)",
+                        padding: "clamp(8px, 1.5vw, 12px)",
+                      }}
+                    >
+                      Book Now
+                    </button>
+                  </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
