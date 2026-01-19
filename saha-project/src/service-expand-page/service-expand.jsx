@@ -117,8 +117,8 @@ function Body() {
       <Background />
 
       <div className="relative inset-0 z-10 flex flex-col">
-        <div className="flex justify-center">
-          <ServiceExpandHeader />
+        <div className="flex justify-center px-4">
+          <ServiceExpandHeader service={currentService} />
         </div>
         <div className="flex justify-center px-4">
           <div className="w-full max-w-300 flex flex-col">
@@ -135,7 +135,7 @@ function Body() {
         <div className="flex justify-center px-4 mt-8">
           <div className="w-full max-w-300 flex gap-8">
             <div className="flex-1">
-              <Review />
+              <Review serviceId={serviceId} />
             </div>
             <div className="w-96">
               <ServiceBook />
