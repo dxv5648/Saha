@@ -1,7 +1,12 @@
 import { useNavigate } from "react-router-dom";
 import WorkImage from "../assets/Work-imgae.png";
 
-export default function ServiceIcon({ service = {} }) {
+export default function ServiceIcon({
+  service = {},
+  isCompareMode = false,
+  isSelected = false,
+  onToggleSelect = () => {},
+}) {
   const navigate = useNavigate();
   const {
     id = 1,
@@ -23,10 +28,13 @@ export default function ServiceIcon({ service = {} }) {
       style={{ marginBottom: "clamp(80px, 12vw, 151px)" }}
     >
       <div
-        className="flex flex-1 flex-col items-start bg-linear-to-b from-[#1a1a1a] to-[#0d0d0d] rounded-[30px] overflow-hidden shadow-2xl hover:shadow-[0_20px_40px_rgba(255,255,255,0.1)] transition-all duration-300 hover:scale-105"
+        className={`flex flex-1 flex-col items-start bg-linear-to-b from-[#1a1a1a] to-[#0d0d0d] rounded-[30px] overflow-hidden shadow-2xl hover:shadow-[0_20px_40px_rgba(255,255,255,0.1)] transition-all duration-300 hover:scale-105 ${
+          isCompareMode ? "cursor-pointer" : ""
+        } ${isSelected ? "ring-2 ring-white" : ""}`}
         style={{
           transform: "perspective(1000px)",
         }}
+        onClick={isCompareMode ? onToggleSelect : undefined}
       >
         <div className="relative w-full overflow-hidden">
           <img
@@ -37,6 +45,27 @@ export default function ServiceIcon({ service = {} }) {
               marginBottom: "clamp(6px, 1vw, 9px)",
             }}
           />
+          {isCompareMode && (
+            <div
+              className="absolute top-2 left-2 z-10"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <input
+                type="checkbox"
+                checked={isSelected}
+                onChange={(e) => {
+                  e.stopPropagation();
+                  onToggleSelect();
+                }}
+                onClick={(e) => e.stopPropagation()}
+                className="w-6 h-6 cursor-pointer accent-white"
+                style={{
+                  width: "clamp(20px, 3vw, 24px)",
+                  height: "clamp(20px, 3vw, 24px)",
+                }}
+              />
+            </div>
+          )}
           <div className="absolute top-0 right-0 bg-linear-to-l from-black to-transparent px-4 py-2 rounded-bl-xl">
             <span
               className="text-white font-bold"
@@ -116,9 +145,9 @@ export default function ServiceIcon({ service = {} }) {
               padding: "clamp(14px, 2vw, 18px)",
               marginBottom: "clamp(16px, 2vw, 20px)",
             }}
-            onClick={handleBookNow}
+            onClick={isCompareMode ? onToggleSelect : handleBookNow}
           >
-            {"Book Now"}
+            {isCompareMode ? (isSelected ? "已选择" : "选择") : "Book Now"}
           </button>
         </div>
       </div>

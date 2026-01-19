@@ -4,6 +4,7 @@ import Header from "../home-page/header.jsx";
 import Filter from "./filter.jsx";
 import ServiceIcon from "./service-icon.jsx";
 import Background from "../home-page/background.jsx";
+import CompareModal from "./compare-modal.jsx";
 import supabase from "../supabase-client";
 
 const SERVICES_PER_PAGE = 9;
@@ -25,6 +26,9 @@ function Body() {
   const [sortBy, setSortBy] = useState("Featured");
   const [supabaseServices, setSupabaseServices] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isCompareMode, setIsCompareMode] = useState(false);
+  const [selectedServices, setSelectedServices] = useState([]);
+  const [showCompareModal, setShowCompareModal] = useState(false);
 
   // Fetch services from Supabase
   useEffect(() => {
@@ -134,6 +138,43 @@ function Body() {
     setCurrentPage(1);
   };
 
+  const handleCompareClick = () => {
+    setIsCompareMode(!isCompareMode);
+    if (isCompareMode) {
+      // 退出比较模式时清空选择
+      setSelectedServices([]);
+    }
+  };
+
+  const handleServiceToggle = (service) => {
+    setSelectedServices((prev) => {
+      const isSelected = prev.some((s) => s.id === service.id);
+      if (isSelected) {
+        return prev.filter((s) => s.id !== service.id);
+      } else {
+        if (prev.length >= 3) {
+          alert("You can only select 3 services to compare");
+          return prev;
+        }
+        return [...prev, service];
+      }
+    });
+  };
+
+  const handleConfirmCompare = () => {
+    if (selectedServices.length === 0) {
+      alert("Please select at least one service to compare");
+      return;
+    }
+    setShowCompareModal(true);
+  };
+
+  const handleCloseCompareModal = () => {
+    setShowCompareModal(false);
+    setIsCompareMode(false);
+    setSelectedServices([]);
+  };
+
   return (
     <div className="w-full relative">
       <Background />
@@ -146,6 +187,10 @@ function Body() {
           onCategoryChange={handleCategoryChange}
           sortBy={sortBy}
           onSortChange={handleSortChange}
+          isCompareMode={isCompareMode}
+          onCompareClick={handleCompareClick}
+          selectedCount={selectedServices.length}
+          onConfirmCompare={handleConfirmCompare}
         />
         <h1 className="text-white text-center text-4xl poppins-bold px-[2vw] mb-10">
           Services in your area
@@ -158,7 +203,13 @@ function Body() {
           }}
         >
           {paginatedServices.map((service) => (
-            <ServiceIcon key={service.id} service={service} />
+            <ServiceIcon
+              key={service.id}
+              service={service}
+              isCompareMode={isCompareMode}
+              isSelected={selectedServices.some((s) => s.id === service.id)}
+              onToggleSelect={() => handleServiceToggle(service)}
+            />
           ))}
         </div>
 
@@ -204,6 +255,12 @@ function Body() {
           </div>
         )}
       </div>
+      {showCompareModal && (
+        <CompareModal
+          services={selectedServices}
+          onClose={handleCloseCompareModal}
+        />
+      )}
     </div>
   );
 }
