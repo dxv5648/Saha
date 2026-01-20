@@ -1,5 +1,7 @@
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import WorkImage from "../assets/Work-imgae.png";
+import supabase from "../supabase-client";
 
 export default function ServiceIcon({ service = {} }) {
   const navigate = useNavigate();
@@ -8,10 +10,47 @@ export default function ServiceIcon({ service = {} }) {
     name = "Master Electrician",
     provider = "John Williams",
     category = "Electrical",
-    rating = 4.8,
-    reviews = 158,
     priceRange = "$80-150/hr",
   } = service;
+
+  const [rating, setRating] = useState(0);
+  const [reviews, setReviews] = useState(0);
+
+  // Fetch reviews and calculate rating
+  useEffect(() => {
+    const fetchReviews = async () => {
+      if (!id) return;
+
+      try {
+        const { data, error } = await supabase
+          .from("Review")
+          .select("Stars")
+          .eq("service_id", id);
+
+        if (error) {
+          console.error("Error fetching reviews:", error);
+          setRating(0);
+          setReviews(0);
+        } else if (data && data.length > 0) {
+          // Calculate average rating
+          const totalStars = data.reduce((sum, review) => sum + review.Stars, 0);
+          const averageRating = totalStars / data.length;
+          // Round to 1 decimal place
+          setRating(parseFloat(averageRating.toFixed(1)));
+          setReviews(data.length);
+        } else {
+          setRating(0);
+          setReviews(0);
+        }
+      } catch (error) {
+        console.error("Unexpected error fetching reviews:", error);
+        setRating(0);
+        setReviews(0);
+      }
+    };
+
+    fetchReviews();
+  }, [id]);
 
   const handleBookNow = () => {
     navigate(`/service/${id}`);
@@ -92,7 +131,7 @@ export default function ServiceIcon({ service = {} }) {
                 className="text-white font-semibold"
                 style={{ fontSize: "clamp(0.75rem, 1.5vw, 0.875rem)" }}
               >
-                {`${rating}`}
+                {rating > 0 ? rating : "N/A"}
               </span>
               <span
                 className="text-[#BABABA]"

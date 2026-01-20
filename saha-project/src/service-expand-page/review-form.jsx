@@ -1,11 +1,13 @@
 import { useState } from "react";
+import supabase from "../supabase-client";
 
-export default function ReviewForm({ onSubmit }) {
+export default function ReviewForm({ onSubmit, serviceId }) {
   const [formData, setFormData] = useState({
     author: "",
     rating: "5",
     text: "",
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -15,7 +17,7 @@ export default function ReviewForm({ onSubmit }) {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!formData.author.trim() || !formData.text.trim()) {
@@ -23,19 +25,61 @@ export default function ReviewForm({ onSubmit }) {
       return;
     }
 
-    const newReview = {
-      author: formData.author,
-      rating: `${formData.rating}/5`,
-      date: new Date().toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      }),
-      text: formData.text,
-    };
+    if (!serviceId) {
+      alert("Service ID is missing. Please refresh the page and try again.");
+      return;
+    }
 
-    onSubmit(newReview);
-    setFormData({ author: "", rating: "5", text: "" });
+    setIsSubmitting(true);
+
+    try {
+      // Insert review into database
+      const { data, error } = await supabase
+        .from("Review")
+        .insert([
+          {
+            user_name: formData.author.trim(),
+            Stars: parseInt(formData.rating),
+            description: formData.text.trim(),
+            service_id: serviceId,
+          },
+        ])
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Error submitting review:", error);
+        alert("Error submitting review: " + error.message);
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Create review object for local state update
+      const newReview = {
+        author: formData.author,
+        rating: `${formData.rating}/5`,
+        date: new Date().toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        }),
+        text: formData.text,
+      };
+
+      // Call onSubmit callback if provided (for local state update)
+      if (onSubmit) {
+        onSubmit(newReview);
+      }
+
+      // Reset form
+      setFormData({ author: "", rating: "5", text: "" });
+      alert("Review submitted successfully!");
+    } catch (error) {
+      console.error("Unexpected error:", error);
+      alert("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -86,9 +130,10 @@ export default function ReviewForm({ onSubmit }) {
 
         <button
           type="submit"
-          className="w-full bg-white hover:bg-[#D1D1D1] text-black font-medium py-2 rounded-lg transition"
+          disabled={isSubmitting}
+          className="w-full bg-white hover:bg-[#D1D1D1] text-black font-medium py-2 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Submit Review
+          {isSubmitting ? "Submitting..." : "Submit Review"}
         </button>
       </form>
     </div>
