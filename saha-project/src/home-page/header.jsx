@@ -1,10 +1,13 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { useAuth } from "../auth/AuthProvider.jsx";
+import LoginModal from "../auth/LoginModal.jsx";
 
 export default function Header() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { user, signOut } = useAuth();
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
 
   const handleScrollTo = (sectionId) => {
     if (location.pathname === "/" || location.pathname === "") {
@@ -17,7 +20,7 @@ export default function Header() {
   };
 
   const handleLoginClick = () => {
-    setIsLoggedIn(true);
+    setIsLoginOpen(true);
   };
 
   return (
@@ -35,10 +38,19 @@ export default function Header() {
         <Link to="/">
           <button className="text-4xl inter-semi-bold mx-[20%]">saha.</button>
         </Link>
-        {isLoggedIn ? (
-          <Link to="/Profile" className="hover:text-gray-300">
-            <button>Profile</button>
-          </Link>
+        {user ? (
+          <div className="flex items-center gap-3">
+            <Link to="/Profile" className="hover:text-gray-300">
+              <button>Profile</button>
+            </Link>
+            <button
+              onClick={() => signOut()}
+              className="hover:text-gray-300"
+              type="button"
+            >
+              Logout
+            </button>
+          </div>
         ) : (
           <button onClick={handleLoginClick} className="hover:text-gray-300">
             Login
@@ -48,6 +60,10 @@ export default function Header() {
           <button>Cart</button>
         </Link>
       </div>
+      <LoginModal
+        isOpen={isLoginOpen}
+        onClose={() => setIsLoginOpen(false)}
+      />
     </div>
   );
 }

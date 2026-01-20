@@ -1,3 +1,24 @@
+# Supabase Auth (Popup Login)
+
+This project uses Supabase Auth in a popup modal opened from the header **Login** button.
+
+## Setup
+
+1. Create a Supabase project
+2. In the Supabase dashboard, go to **Project Settings → API**
+3. Add these env vars (Vite requires the `VITE_` prefix):
+
+```bash
+VITE_SUPABASE_URL=your-project-url
+VITE_SUPABASE_KEY=your-anon-public-key
+```
+
+4. Enable **Google** provider under **Authentication → Providers**:
+   - Toggle "Enable Sign in with Google" to ON
+   - Add your **Client ID** (from Google Cloud Console)
+   - Add your **Client Secret** (from Google Cloud Console)
+5. Add your local URL to allowed redirect URLs (typically `http://localhost:5173`)
+
 # React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
