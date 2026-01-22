@@ -1,4 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
+import { useSearchParams, useLocation, useNavigate } from "react-router-dom";
+import AISearchResults from "../ai/AISearchResults";
 import Footer from "../home-page/footer.jsx";
 import Header from "../home-page/header.jsx";
 import Filter from "./filter.jsx";
@@ -19,12 +21,39 @@ export default function Service() {
 }
 
 function Body() {
+  const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState("Featured");
   const [supabaseServices, setSupabaseServices] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [compareServiceIds, setCompareServiceIds] = useState([]);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const aiResults = location?.state?.aiResults || null;
+
+  // If AI provided results via navigation state, use them to filter the services list
+  useEffect(() => {
+    if (aiResults && Array.isArray(aiResults.services)) {
+      const ids = aiResults.services.map((s) => s.id);
+      setCompareServiceIds(ids);
+      setSearchQuery("");
+      setSelectedCategory("All Categories");
+      setCurrentPage(1);
+    }
+  }, [aiResults]);
+
+  // Handle compare query parameter from AI search
+  useEffect(() => {
+    const compareParam = searchParams.get("compare");
+    if (compareParam) {
+      const ids = compareParam.split(",").map((id) => parseInt(id.trim()));
+      setCompareServiceIds(ids);
+      // Auto-select services for comparison
+      setCurrentPage(1);
+    }
+  }, [searchParams]);
 
   // Fetch services from Supabase
   useEffect(() => {
@@ -87,6 +116,13 @@ function Body() {
 
   const filteredServices = useMemo(() => {
     let services = allServices.filter((service) => {
+      // If compareServiceIds is set, only show those services
+      if (compareServiceIds.length > 0) {
+        if (!compareServiceIds.includes(service.id)) {
+          return false;
+        }
+      }
+      
       const matchesSearch =
         service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         service.provider.toLowerCase().includes(searchQuery.toLowerCase());
@@ -110,7 +146,7 @@ function Body() {
     }
 
     return services;
-  }, [searchQuery, selectedCategory, sortBy, allServices]);
+  }, [searchQuery, selectedCategory, sortBy, allServices, compareServiceIds]);
 
   const totalPages = Math.ceil(filteredServices.length / SERVICES_PER_PAGE);
   const startIndex = (currentPage - 1) * SERVICES_PER_PAGE;
@@ -157,6 +193,21 @@ function Body() {
             marginBottom: "clamp(40px, 6vw, 80px)",
           }}
         >
+          {/* If the AI produced results and passed them via location state, show them inline here */}
+          {aiResults && (
+            <div className="col-span-full mb-6">
+              <AISearchResults
+                results={aiResults}
+                inline={true}
+                onClose={() => {
+                  // Clear location state by navigating to same path without state
+                  // and clear AI filters so the full services list is shown again
+                  setCompareServiceIds([]);
+                  navigate("/Service", { replace: true, state: null });
+                }}
+              />
+            </div>
+          )}
           {paginatedServices.map((service) => (
             <ServiceIcon key={service.id} service={service} />
           ))}
