@@ -235,12 +235,7 @@ export default function CartItems() {
                     {item.cost}
                   </span>
                   <div className="flex items-center gap-4">
-                    <button
-                      className="bg-[#1C1C1CB0] text-[#D1D1D1] text-xs py-2 px-4 rounded-[10px] border border-solid border-[#434343] hover:bg-[#2C2C2C] transition"
-                      onClick={() => alert("Edit time")}
-                    >
-                      Edit Time
-                    </button>
+
                     <button
                       className="text-[#800000] text-sm hover:text-red-500 transition font-medium"
                       onClick={() => handleRemove(item.id)}
