@@ -129,13 +129,6 @@ export default function OrderSummary() {
           >
             Proceed to Payment
           </button>
-
-          <button
-            className="w-full bg-[#1C1C1CB0] text-[#D1D1D1] text-sm py-3 rounded-[15px] border border-[#434343] hover:bg-[#2C2C2C] transition"
-            onClick={() => (window.location.href = "/service")}
-          >
-            Continue Shopping
-          </button>
         </>
       )}
     </div>
