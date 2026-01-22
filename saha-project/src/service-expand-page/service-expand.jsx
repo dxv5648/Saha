@@ -138,7 +138,12 @@ function Body() {
               <Review serviceId={serviceId} />
             </div>
             <div className="w-96">
-              <ServiceBook />
+              <ServiceBook
+                serviceList={currentService.service_list}
+                servicePrice={currentService.service_price}
+                serviceId={currentService.id}
+                serviceName={currentService.name}
+              />
             </div>
           </div>
         </div>
