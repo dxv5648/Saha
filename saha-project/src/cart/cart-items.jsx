@@ -37,8 +37,10 @@ export default function CartItems() {
         }
 
         // Fetch all Cart_Item details
-        const cartItemIds = cartData.map((cart) => cart.cart_item_id).filter(Boolean);
-        
+        const cartItemIds = cartData
+          .map((cart) => cart.cart_item_id)
+          .filter(Boolean);
+
         // If no cart item IDs, set empty cart
         if (cartItemIds.length === 0) {
           setCartItems([]);
@@ -60,19 +62,18 @@ export default function CartItems() {
         }
 
         // Fetch Services separately if we have service_ids
-        const serviceIds = cartItemsData
-          ?.map(item => item.service_id)
-          .filter(Boolean) || [];
-        
+        const serviceIds =
+          cartItemsData?.map((item) => item.service_id).filter(Boolean) || [];
+
         let servicesMap = new Map();
         if (serviceIds.length > 0) {
           const { data: servicesData } = await supabase
             .from("Services")
-            .select("id, provider")
+            .select("id, provider, image_url")
             .in("id", serviceIds);
-          
+
           if (servicesData) {
-            servicesMap = new Map(servicesData.map(s => [s.id, s]));
+            servicesMap = new Map(servicesData.map((s) => [s.id, s]));
           }
         }
 
@@ -82,7 +83,9 @@ export default function CartItems() {
           cartItemsData.forEach((item) => {
             cartItemMap.set(item.id, {
               ...item,
-              Services: item.service_id ? servicesMap.get(item.service_id) : null
+              Services: item.service_id
+                ? servicesMap.get(item.service_id)
+                : null,
             });
           });
         }
@@ -93,43 +96,51 @@ export default function CartItems() {
           .map((cart) => {
             const cartItem = cartItemMap.get(cart.cart_item_id);
             const service = cartItem?.Services;
-              
-              // Format date and time
-              const date = cartItem.date
-                ? new Date(cartItem.date).toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                    year: cartItem.date.split("-")[0] !== new Date().getFullYear().toString() ? "numeric" : undefined,
-                  })
-                : "";
-              
-              // Format time (convert 24h to 12h)
-              let timeFormatted = "";
-              if (cartItem.time) {
-                const [hours, minutes] = cartItem.time.split(":");
-                const hour24 = parseInt(hours);
-                const hour12 = hour24 > 12 ? hour24 - 12 : hour24 === 0 ? 12 : hour24;
-                const ampm = hour24 >= 12 ? "PM" : "AM";
-                timeFormatted = `${hour12}:${minutes} ${ampm}`;
-              }
 
-              return {
-                id: cart.id,
-                cartItemId: cartItem.id,
-                title: service
-                  ? `${cartItem.service || "Service"}: ${service.provider}`
-                  : cartItem.service || "Service",
-                serviceList: cartItem.service_list || "",
-                time: date && timeFormatted ? `${date}, ${timeFormatted}` : date || timeFormatted || "",
-                cost: `$${cartItem.cost ? cartItem.cost.toFixed(2) : "0.00"}`,
-                image: WorkImage,
-                serviceId: cartItem.service_id,
-                date: cartItem.date,
-                timeValue: cartItem.time,
-              };
-            });
+            // Format date and time
+            const date = cartItem.date
+              ? new Date(cartItem.date).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year:
+                    cartItem.date.split("-")[0] !==
+                    new Date().getFullYear().toString()
+                      ? "numeric"
+                      : undefined,
+                })
+              : "";
+
+            // Format time (convert 24h to 12h)
+            let timeFormatted = "";
+            if (cartItem.time) {
+              const [hours, minutes] = cartItem.time.split(":");
+              const hour24 = parseInt(hours);
+              const hour12 =
+                hour24 > 12 ? hour24 - 12 : hour24 === 0 ? 12 : hour24;
+              const ampm = hour24 >= 12 ? "PM" : "AM";
+              timeFormatted = `${hour12}:${minutes} ${ampm}`;
+            }
+
+            return {
+              id: cart.id,
+              cartItemId: cartItem.id,
+              title: service
+                ? `${cartItem.service || "Service"}: ${service.provider}`
+                : cartItem.service || "Service",
+              serviceList: cartItem.service_list || "",
+              time:
+                date && timeFormatted
+                  ? `${date}, ${timeFormatted}`
+                  : date || timeFormatted || "",
+              cost: `$${cartItem.cost ? cartItem.cost.toFixed(2) : "0.00"}`,
+              image: service?.image_url || WorkImage,
+              serviceId: cartItem.service_id,
+              date: cartItem.date,
+              timeValue: cartItem.time,
+            };
+          });
         setCartItems(transformedItems);
-        
+
         // Dispatch event to refresh order summary
         window.dispatchEvent(new CustomEvent("cartUpdated"));
       } catch (error) {
@@ -181,7 +192,7 @@ export default function CartItems() {
 
       // Remove from local state
       setCartItems((prev) => prev.filter((item) => item.id !== cartId));
-      
+
       // Dispatch event to refresh order summary
       window.dispatchEvent(new CustomEvent("cartUpdated"));
     } catch (error) {
@@ -239,7 +250,6 @@ export default function CartItems() {
                     {item.cost}
                   </span>
                   <div className="flex items-center gap-4">
-
                     <button
                       className="text-[#800000] text-sm hover:text-red-500 transition font-medium"
                       onClick={() => handleRemove(item.id)}

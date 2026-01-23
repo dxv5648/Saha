@@ -72,16 +72,20 @@ function Body() {
             // Calculate priceRange from service_price if available
             let priceRange = "$50-100/hr"; // default
             if (service.service_price) {
-              const prices = service.service_price.split(",").map((p) => parseFloat(p.trim())).filter((p) => !isNaN(p));
+              const prices = service.service_price
+                .split(",")
+                .map((p) => parseFloat(p.trim()))
+                .filter((p) => !isNaN(p));
               if (prices.length > 0) {
                 const minPrice = Math.round(Math.min(...prices));
                 const maxPrice = Math.round(Math.max(...prices));
-                priceRange = minPrice === maxPrice 
-                  ? `$${minPrice}/hr` 
-                  : `$${minPrice}-${maxPrice}/hr`;
+                priceRange =
+                  minPrice === maxPrice
+                    ? `$${minPrice}/hr`
+                    : `$${minPrice}-${maxPrice}/hr`;
               }
             }
-            
+
             return {
               id: service.id || `supabase-${index}`,
               name: service.name,
@@ -90,6 +94,7 @@ function Body() {
               rating: service.rating || 4.5,
               reviews: service.reviews || 100,
               priceRange: priceRange,
+              image_url: service.image_url,
             };
           });
           setSupabaseServices(transformedServices);
@@ -122,7 +127,7 @@ function Body() {
           return false;
         }
       }
-      
+
       const matchesSearch =
         service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         service.provider.toLowerCase().includes(searchQuery.toLowerCase());
@@ -152,7 +157,7 @@ function Body() {
   const startIndex = (currentPage - 1) * SERVICES_PER_PAGE;
   const paginatedServices = filteredServices.slice(
     startIndex,
-    startIndex + SERVICES_PER_PAGE
+    startIndex + SERVICES_PER_PAGE,
   );
 
   const handleSearchChange = (query) => {

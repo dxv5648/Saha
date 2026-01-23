@@ -51,7 +51,7 @@ export default function FavouriteServices() {
 
         const { data: servicesData, error: servicesError } = await supabase
           .from("Services")
-          .select("id, provider")
+          .select("id, provider, image_url")
           .in("id", serviceIds);
 
         if (servicesError) {
@@ -62,7 +62,7 @@ export default function FavouriteServices() {
           const services = servicesData.map((service) => ({
             id: service.id,
             provider: service.provider,
-            image: WorkImage, // Use fallback image since Services table doesn't have image column
+            image: service.image_url || WorkImage,
           }));
           setFavoriteServices(services);
         }
@@ -102,7 +102,8 @@ export default function FavouriteServices() {
       ) : favoriteServices.length === 0 ? (
         <div className="text-center py-8">
           <span className="text-[#D1D1D1] text-sm">
-            No favorite services yet. Add services to your favorites to see them here.
+            No favorite services yet. Add services to your favorites to see them
+            here.
           </span>
         </div>
       ) : (

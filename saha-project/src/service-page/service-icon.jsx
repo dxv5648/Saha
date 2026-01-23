@@ -11,6 +11,7 @@ export default function ServiceIcon({ service = {} }) {
     provider = "John Williams",
     category = "Electrical",
     priceRange = "$80-150/hr",
+    image_url = null,
   } = service;
 
   const [rating, setRating] = useState(0);
@@ -33,7 +34,10 @@ export default function ServiceIcon({ service = {} }) {
           setReviews(0);
         } else if (data && data.length > 0) {
           // Calculate average rating
-          const totalStars = data.reduce((sum, review) => sum + review.Stars, 0);
+          const totalStars = data.reduce(
+            (sum, review) => sum + review.Stars,
+            0,
+          );
           const averageRating = totalStars / data.length;
           // Round to 1 decimal place
           setRating(parseFloat(averageRating.toFixed(1)));
@@ -69,12 +73,13 @@ export default function ServiceIcon({ service = {} }) {
       >
         <div className="relative w-full overflow-hidden">
           <img
-            src={WorkImage}
+            src={image_url || WorkImage}
             className="w-full object-cover rounded-t-[30px] transition-transform duration-500 hover:scale-110"
             style={{
               height: "clamp(250px, 35vw, 393px)",
               marginBottom: "clamp(6px, 1vw, 9px)",
             }}
+            alt={name}
           />
           <div className="absolute top-0 right-0 bg-linear-to-l from-black to-transparent px-4 py-2 rounded-bl-xl">
             <span
