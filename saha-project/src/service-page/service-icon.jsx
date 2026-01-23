@@ -147,7 +147,7 @@ export default function ServiceIcon({
             }}
             onClick={isCompareMode ? onToggleSelect : handleBookNow}
           >
-            {isCompareMode ? (isSelected ? "已选择" : "选择") : "Book Now"}
+            {isCompareMode ? (isSelected ? "Chosen" : "Choose") : "Book Now"}
           </button>
         </div>
       </div>
