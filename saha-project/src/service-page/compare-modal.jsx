@@ -1,5 +1,4 @@
 import { useNavigate } from "react-router-dom";
-import Face from "../assets/Face.jpg";
 
 export default function CompareModal({ services = [], onClose = () => {} }) {
   const navigate = useNavigate();
@@ -39,7 +38,8 @@ export default function CompareModal({ services = [], onClose = () => {} }) {
               Compare Service Providers
             </h1>
             <p className="mt-2 text-xs sm:text-sm text-[#BABABA] inter-regular">
-              Comparing {services.length} selected service{services.length > 1 ? "s" : ""}
+              Comparing {services.length} selected service
+              {services.length > 1 ? "s" : ""}
             </p>
           </div>
           <button
@@ -85,121 +85,140 @@ export default function CompareModal({ services = [], onClose = () => {} }) {
               </div>
 
               {/* Right Column - Service Cards */}
-              <div className={`grid gap-4 sm:gap-6 ${
-                services.length === 1 
-                  ? 'grid-cols-1' 
-                  : services.length === 2 
-                    ? 'grid-cols-1 sm:grid-cols-2' 
-                    : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
-              }`}>
+              <div
+                className={`grid gap-4 sm:gap-6 ${
+                  services.length === 1
+                    ? "grid-cols-1"
+                    : services.length === 2
+                      ? "grid-cols-1 sm:grid-cols-2"
+                      : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+                }`}
+              >
                 {services.map((service) => (
                   <div
                     key={service.id}
                     className="bg-[#161616] rounded-[20px] p-4 sm:p-6 relative flex flex-col"
                   >
-                  {/* Remove Button */}
-                  <button
-                    onClick={(e) => handleRemoveService(service.id, e)}
-                    className="absolute top-4 right-4 text-white hover:text-gray-300 text-xl font-bold w-6 h-6 flex items-center justify-center rounded-full hover:bg-[#2a2a2a] transition-colors z-10"
-                  >
-                    ×
-                  </button>
-
-                  {/* Profile Image */}
-                  <div className="flex justify-center mb-4">
-                    <div className="relative">
-                      <img
-                        src={Face}
-                        alt={service.provider}
-                        className="object-cover rounded-full"
-                        style={{
-                          width: "clamp(100px, 12vw, 140px)",
-                          height: "clamp(100px, 12vw, 140px)",
-                        }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Provider Name */}
-                  <h3 className="text-white text-center inter-semi-bold mb-1" style={{
-                    fontSize: "clamp(1.125rem, 2vw, 1.375rem)",
-                  }}>
-                    {service.provider}
-                  </h3>
-
-                  {/* Service Title */}
-                  <p className="text-[#BABABA] text-center inter-regular mb-6" style={{
-                    fontSize: "clamp(0.875rem, 1.5vw, 1rem)",
-                  }}>
-                    {service.name}
-                  </p>
-
-                  {/* Divider above Rating */}
-                  <div className="w-full h-px bg-[#434343]/20 mb-4 -translate-y-1" />
-
-                  {/* Rating Section - aligned with left label */}
-                  <div className="h-[100px] flex items-center justify-center">
-                    {/* Stars and Rating on same line */}
-                    <div className="flex items-center gap-2">
-                      <div className="flex gap-0.5">
-                        {[...Array(5)].map((_, i) => (
-                          <span
-                            key={i}
-                            className="text-yellow-400"
-                            style={{ fontSize: "clamp(1.125rem, 1.5vw, 1.375rem)" }}
-                          >
-                            ★
-                          </span>
-                        ))}
-                      </div>
-                      <span className="text-white inter-regular" style={{
-                        fontSize: "clamp(0.875rem, 1.5vw, 1rem)",
-                      }}>
-                        {service.rating}/5
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Divider below Rating */}
-                  <div className="w-full h-px bg-[#434343]/20 mt-4 translate-y" />
-
-                  {/* Hourly Rate Section - aligned with left label */}
-                  <div className="h-[140px] flex items-center justify-center">
-                    <div className="text-white text-center inter-semi-bold" style={{
-                      fontSize: "clamp(1.125rem, 2vw, 1.375rem)",
-                    }}>
-                      {getHourlyRate(service.priceRange)} /hr
-                    </div>
-                  </div>
-
-                  {/* Divider above Availability */}
-                  <div className="w-full h-px bg-[#434343]/20 mt-4 -translate-y-7" />
-
-                  {/* Availability Section - aligned with left label */}
-                  <div className="h-[60px] flex items-center justify-center">
-                    <div className="bg-green-600 text-white rounded-[10px] px-6 py-3 inter-regular" style={{
-                      fontSize: "clamp(0.875rem, 1.5vw, 1rem)",
-                    }}>
-                      Available Tomorrow
-                    </div>
-                  </div>
-
-                  {/* Divider below Availability */}
-                  <div className="w-full h-px bg-[#434343]/20 mt-4 translate-y-6" />
-
-                  {/* Book Now Button */}
-                  <div className="h-[135px] flex items-end">
+                    {/* Remove Button */}
                     <button
-                      onClick={() => handleBookNow(service.id)}
-                      className="bg-white hover:bg-gray-100 text-black text-center rounded-[15px] border-0 cursor-pointer w-full font-semibold transition-all duration-300 active:scale-95"
+                      onClick={(e) => handleRemoveService(service.id, e)}
+                      className="absolute top-4 right-4 text-white hover:text-gray-300 text-xl font-bold w-6 h-6 flex items-center justify-center rounded-full hover:bg-[#2a2a2a] transition-colors z-10"
+                    >
+                      ×
+                    </button>
+
+                    {/* Profile Image */}
+                    <div className="flex justify-center mb-4">
+                      <div className="relative">
+                        <img
+                          src={service.image_url}
+                          alt={service.provider}
+                          className="object-cover rounded-full"
+                          style={{
+                            width: "clamp(100px, 12vw, 140px)",
+                            height: "clamp(100px, 12vw, 140px)",
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Provider Name */}
+                    <h3
+                      className="text-white text-center inter-semi-bold mb-1"
                       style={{
-                        fontSize: "clamp(0.75rem, 1.2vw, 0.875rem)",
-                        padding: "clamp(8px, 1.5vw, 12px)",
+                        fontSize: "clamp(1.125rem, 2vw, 1.375rem)",
                       }}
                     >
-                      Book Now
-                    </button>
-                  </div>
+                      {service.provider}
+                    </h3>
+
+                    {/* Service Title */}
+                    <p
+                      className="text-[#BABABA] text-center inter-regular mb-6"
+                      style={{
+                        fontSize: "clamp(0.875rem, 1.5vw, 1rem)",
+                      }}
+                    >
+                      {service.name}
+                    </p>
+
+                    {/* Divider above Rating */}
+                    <div className="w-full h-px bg-[#434343]/20 mb-4 -translate-y-1" />
+
+                    {/* Rating Section - aligned with left label */}
+                    <div className="h-[100px] flex items-center justify-center">
+                      {/* Stars and Rating on same line */}
+                      <div className="flex items-center gap-2">
+                        <div className="flex gap-0.5">
+                          {[...Array(5)].map((_, i) => (
+                            <span
+                              key={i}
+                              className="text-yellow-400"
+                              style={{
+                                fontSize: "clamp(1.125rem, 1.5vw, 1.375rem)",
+                              }}
+                            >
+                              ★
+                            </span>
+                          ))}
+                        </div>
+                        <span
+                          className="text-white inter-regular"
+                          style={{
+                            fontSize: "clamp(0.875rem, 1.5vw, 1rem)",
+                          }}
+                        >
+                          {service.rating}/5
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Divider below Rating */}
+                    <div className="w-full h-px bg-[#434343]/20 mt-4 translate-y" />
+
+                    {/* Hourly Rate Section - aligned with left label */}
+                    <div className="h-[140px] flex items-center justify-center">
+                      <div
+                        className="text-white text-center inter-semi-bold"
+                        style={{
+                          fontSize: "clamp(1.125rem, 2vw, 1.375rem)",
+                        }}
+                      >
+                        {getHourlyRate(service.priceRange)} /hr
+                      </div>
+                    </div>
+
+                    {/* Divider above Availability */}
+                    <div className="w-full h-px bg-[#434343]/20 mt-4 -translate-y-7" />
+
+                    {/* Availability Section - aligned with left label */}
+                    <div className="h-[60px] flex items-center justify-center">
+                      <div
+                        className="bg-green-600 text-white rounded-[10px] px-6 py-3 inter-regular"
+                        style={{
+                          fontSize: "clamp(0.875rem, 1.5vw, 1rem)",
+                        }}
+                      >
+                        Available Tomorrow
+                      </div>
+                    </div>
+
+                    {/* Divider below Availability */}
+                    <div className="w-full h-px bg-[#434343]/20 mt-4 translate-y-6" />
+
+                    {/* Book Now Button */}
+                    <div className="h-[135px] flex items-end">
+                      <button
+                        onClick={() => handleBookNow(service.id)}
+                        className="bg-white hover:bg-gray-100 text-black text-center rounded-[15px] border-0 cursor-pointer w-full font-semibold transition-all duration-300 active:scale-95"
+                        style={{
+                          fontSize: "clamp(0.75rem, 1.2vw, 0.875rem)",
+                          padding: "clamp(8px, 1.5vw, 12px)",
+                        }}
+                      >
+                        Book Now
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
