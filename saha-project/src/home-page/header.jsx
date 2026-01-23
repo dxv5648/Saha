@@ -43,13 +43,6 @@ export default function Header() {
             <Link to="/Profile" className="hover:text-gray-300">
               <button>Profile</button>
             </Link>
-            <button
-              onClick={() => signOut()}
-              className="hover:text-gray-300"
-              type="button"
-            >
-              Logout
-            </button>
           </div>
         ) : (
           <button onClick={handleLoginClick} className="hover:text-gray-300">
@@ -60,10 +53,7 @@ export default function Header() {
           <button>Cart</button>
         </Link>
       </div>
-      <LoginModal
-        isOpen={isLoginOpen}
-        onClose={() => setIsLoginOpen(false)}
-      />
+      <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
     </div>
   );
 }
