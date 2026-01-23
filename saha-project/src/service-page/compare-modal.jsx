@@ -30,32 +30,32 @@ export default function CompareModal({ services = [], onClose = () => {} }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
-      <div className="bg-[#1a1a1a] rounded-[30px] w-full max-w-6xl max-h-[90vh] overflow-auto m-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-2 sm:p-4">
+      <div className="bg-[#1a1a1a] rounded-[30px] w-full max-w-6xl max-h-[90vh] overflow-auto">
         {/* Header */}
-        <div className="flex justify-center py-6 relative">
-          <div className="bg-[#2a2a2a]/80 backdrop-blur px-10 py-6 rounded-2xl text-center min-w-[360px]">
-            <h1 className="text-2xl font-semibold text-white poppins-bold">
+        <div className="flex justify-center py-4 sm:py-6 relative">
+          <div className="bg-[#2a2a2a]/80 backdrop-blur px-4 sm:px-10 py-4 sm:py-6 rounded-2xl text-center w-full max-w-[360px]">
+            <h1 className="text-xl sm:text-2xl font-semibold text-white poppins-bold">
               Compare Service Providers
             </h1>
-            <p className="mt-2 text-sm text-[#BABABA] inter-regular">
+            <p className="mt-2 text-xs sm:text-sm text-[#BABABA] inter-regular">
               Comparing {services.length} selected service{services.length > 1 ? "s" : ""}
             </p>
           </div>
           <button
             onClick={onClose}
-            className="absolute top-6 right-6 text-white hover:text-gray-300 text-2xl font-bold w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#3a3a3a] transition-colors"
+            className="absolute top-4 right-4 sm:top-6 sm:right-6 text-white hover:text-gray-300 text-2xl font-bold w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#3a3a3a] transition-colors"
           >
             ×
           </button>
         </div>
 
         {/* Comparison Content */}
-        <div className="px-10 pb-10">
-          <div className="bg-[#161616]/60 rounded-3xl p-10">
-            <div className="grid grid-cols-[160px_1fr] gap-8 items-start">
+        <div className="px-4 sm:px-6 lg:px-10 pb-6 sm:pb-10">
+          <div className="bg-[#161616]/60 rounded-3xl p-4 sm:p-6 lg:p-10">
+            <div className="grid grid-cols-1 lg:grid-cols-[160px_1fr] gap-4 sm:gap-6 lg:gap-8 items-start">
               {/* Left Column - Labels */}
-              <div className="flex flex-col text-sm text-white items-start">
+              <div className="hidden lg:flex flex-col text-sm text-white items-start">
                 {/* Header spacer */}
                 <div className="h-[250px]" />
 
@@ -85,11 +85,17 @@ export default function CompareModal({ services = [], onClose = () => {} }) {
               </div>
 
               {/* Right Column - Service Cards */}
-              <div className={`grid gap-6 ${services.length === 1 ? 'grid-cols-1' : services.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
+              <div className={`grid gap-4 sm:gap-6 ${
+                services.length === 1 
+                  ? 'grid-cols-1' 
+                  : services.length === 2 
+                    ? 'grid-cols-1 sm:grid-cols-2' 
+                    : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+              }`}>
                 {services.map((service) => (
                   <div
                     key={service.id}
-                    className="bg-[#161616] rounded-[20px] p-6 relative flex flex-col"
+                    className="bg-[#161616] rounded-[20px] p-4 sm:p-6 relative flex flex-col"
                   >
                   {/* Remove Button */}
                   <button
