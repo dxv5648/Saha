@@ -123,11 +123,18 @@ export default function OrderSummary() {
           </div>
 
           <button
-            className="w-full bg-white text-black text-base py-4 rounded-[15px] hover:bg-gray-100 transition mb-3 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-white text-black text-base py-4 rounded-[10px] hover:bg-gray-100 transition mb-3 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
             onClick={() => alert("Proceed to payment")}
             disabled={serviceCount === 0}
           >
             Proceed to Payment
+          </button>
+
+          <button
+            className="w-full bg-[#1C1C1CB0] text-[#D1D1D1] text-sm py-3 rounded-[10px] border border-solid border-[#434343] hover:bg-[#2C2C2C] transition"
+            onClick={() => (window.location.href = "/service")}
+          >
+            Continue Shopping
           </button>
         </>
       )}

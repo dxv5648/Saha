@@ -112,20 +112,20 @@ export default function LoginModal({ isOpen, onClose }) {
       />
 
       {/* modal */}
-      <div className="relative w-full max-w-md overflow-hidden rounded-[20px] bg-[#121212F0] shadow-2xl">
+      <div className="relative w-full max-w-md overflow-hidden rounded-[20px] bg-[#0F0F0FB5] shadow-2xl border border-[#BABABA]/20 inter-regular">
         <div className="px-6 pb-6 pt-[60px]">
           <div className="absolute right-4 top-4">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-md px-2 py-1 text-sm text-white/80 hover:text-white"
+              className="rounded-md px-2 py-1 text-sm text-white/80 hover:text-white transition-colors"
               aria-label="Close"
             >
               ✕
             </button>
           </div>
 
-          <span className="mb-[30px] block text-center text-3xl font-bold text-white">
+          <span className="mb-[30px] block text-center text-3xl font-bold text-white poppins-bold">
             {title}
           </span>
 
@@ -136,7 +136,7 @@ export default function LoginModal({ isOpen, onClose }) {
               onChange={(event) => setEmail(event.target.value)}
               type="email"
               autoComplete="email"
-              className="mb-4 rounded-[10px] border border-solid border-[#BABABA] bg-[#0F0F0F] px-3 py-4 text-lg text-white placeholder:text-[#BABABA]"
+              className="mb-4 rounded-[10px] border border-solid border-[#BABABA]/40 bg-[#1A1A1A] px-3 py-4 text-lg text-white placeholder:text-[#BABABA]/60 focus:border-[#014A86] focus:outline-none transition-colors inter-regular"
               required
             />
 
@@ -146,29 +146,33 @@ export default function LoginModal({ isOpen, onClose }) {
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 type="password"
-                autoComplete={mode === "register" ? "new-password" : "current-password"}
-                className="mb-4 rounded-[10px] border border-solid border-[#BABABA] bg-[#0F0F0F] px-3 py-4 text-lg text-white placeholder:text-[#BABABA]"
+                autoComplete={
+                  mode === "register" ? "new-password" : "current-password"
+                }
+                className="mb-4 rounded-[10px] border border-solid border-[#BABABA]/40 bg-[#1A1A1A] px-3 py-4 text-lg text-white placeholder:text-[#BABABA]/60 focus:border-[#014A86] focus:outline-none transition-colors inter-regular"
                 required
                 minLength={6}
               />
             )}
 
             {error ? (
-              <div className="mb-3 rounded-md bg-red-500/15 px-3 py-2 text-sm text-red-200">
+              <div className="mb-3 rounded-[10px] bg-red-500/15 px-3 py-2 text-sm text-red-200 inter-regular">
                 {error}
               </div>
             ) : null}
 
             {notice ? (
-              <div className="mb-3 rounded-md bg-blue-500/15 px-3 py-2 text-sm text-blue-200">
+              <div className="mb-3 rounded-[10px] bg-blue-500/15 px-3 py-2 text-sm text-blue-200 inter-regular">
                 {notice}
               </div>
             ) : null}
 
             <button
               className={cx(
-                "mb-4 rounded-[10px] border border-solid border-[#BABABA] bg-[#0F0F0F] px-3 py-[17px] text-left text-lg text-[#BABABA]",
-                isSubmitting ? "opacity-60" : "hover:border-white/70",
+                "mb-4 rounded-[10px] border border-solid border-[#014A86]/60 bg-[#014A86] px-3 py-[17px] text-center text-lg text-white font-semibold transition-all inter-semi-bold",
+                isSubmitting
+                  ? "opacity-60 cursor-not-allowed"
+                  : "hover:border-[#014A86] hover:bg-[#0B3A6A]",
               )}
               style={{ boxShadow: "0px 4px 4px #00000040" }}
               disabled={isSubmitting}
@@ -188,8 +192,10 @@ export default function LoginModal({ isOpen, onClose }) {
               onClick={() => oauth("google")}
               disabled={isSubmitting}
               className={cx(
-                "rounded-[10px] border border-solid border-[#BABABA] bg-[#0F0F0F] px-3 py-3 text-left text-sm text-[#BABABA]",
-                isSubmitting ? "opacity-60" : "hover:border-white/70",
+                "rounded-[10px] border border-solid border-[#BABABA]/40 bg-[#1A1A1A] px-3 py-3 text-center text-sm text-white transition-all inter-semi-bold",
+                isSubmitting
+                  ? "opacity-60 cursor-not-allowed"
+                  : "hover:border-[#BABABA]/70 hover:bg-[#252525]",
               )}
             >
               Continue with Google
@@ -201,7 +207,7 @@ export default function LoginModal({ isOpen, onClose }) {
               <button
                 type="button"
                 onClick={() => setMode("register")}
-                className="text-base text-[#014A86] hover:underline"
+                className="text-base text-[#014A86] hover:text-[#0B5BA3] hover:underline transition-colors inter-regular"
               >
                 Register to saha.
               </button>
@@ -209,7 +215,7 @@ export default function LoginModal({ isOpen, onClose }) {
               <button
                 type="button"
                 onClick={() => setMode("login")}
-                className="text-base text-[#014A86] hover:underline"
+                className="text-base text-[#014A86] hover:text-[#0B5BA3] hover:underline transition-colors inter-regular"
               >
                 Already have an account? Sign in
               </button>
@@ -219,7 +225,7 @@ export default function LoginModal({ isOpen, onClose }) {
               <button
                 type="button"
                 onClick={() => setMode("forgot")}
-                className="text-base text-[#014A86] hover:underline"
+                className="text-base text-[#014A86] hover:text-[#0B5BA3] hover:underline transition-colors inter-regular"
               >
                 Forgot Password
               </button>
@@ -227,7 +233,7 @@ export default function LoginModal({ isOpen, onClose }) {
               <button
                 type="button"
                 onClick={() => setMode("login")}
-                className="text-base text-[#014A86] hover:underline"
+                className="text-base text-[#014A86] hover:text-[#0B5BA3] hover:underline transition-colors inter-regular"
               >
                 Back to sign in
               </button>
@@ -238,5 +244,3 @@ export default function LoginModal({ isOpen, onClose }) {
     </div>
   );
 }
-
-

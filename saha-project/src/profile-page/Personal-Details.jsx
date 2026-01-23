@@ -77,8 +77,16 @@ export default function PersonalDetails() {
       return;
     }
 
-    if (!email || !email.trim()) {
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) {
       alert("Please enter an email address");
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      alert("Please enter a valid email address");
       return;
     }
 
@@ -89,12 +97,16 @@ export default function PersonalDetails() {
       // timetz format: "00:00:00+11:00" (time with timezone)
       const tzMatch = timezone.match(/GMT\s*([+-]?\d{1,2}):00/);
       let timezoneTimetz = "00:00:00+13:00"; // default
-      if (tzMatch) {
+      if (tzMatch && tzMatch[1]) {
         const offset = tzMatch[1];
         // Ensure proper format: +11:00 or -05:00
-        const offsetStr = (offset.startsWith("+") || offset.startsWith("-")) 
-          ? offset + ":00" 
-          : "+" + offset + ":00";
+        let offsetStr;
+        if (offset.startsWith("+") || offset.startsWith("-")) {
+          offsetStr = offset + ":00";
+        } else {
+          // Handle positive offsets without + sign
+          offsetStr = "+" + offset + ":00";
+        }
         // Format as timetz: "00:00:00+offset"
         timezoneTimetz = `00:00:00${offsetStr}`;
       }
@@ -120,7 +132,7 @@ export default function PersonalDetails() {
           .from("personal_details")
           .update({
             time_zone: timezoneTimetz,
-            email: email.trim(),
+            email: trimmedEmail,
           })
           .eq("user_id", user.id);
 
@@ -138,7 +150,7 @@ export default function PersonalDetails() {
             {
               user_id: user.id,
               time_zone: timezoneTimetz,
-              email: email.trim(),
+              email: trimmedEmail,
             },
           ]);
 
@@ -214,7 +226,7 @@ export default function PersonalDetails() {
       />
 
       <button
-        className="bg-white text-black w-full rounded-[10px] border-0 cursor-pointer hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="bg-white text-black w-full rounded-[10px] border-0 cursor-pointer hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
         style={{
           fontSize: "clamp(1rem, 2vw, 1.125rem)",
           padding: "clamp(8px, 1.5vw, 10px)",
