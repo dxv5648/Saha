@@ -51,7 +51,7 @@ export default function FavouriteServices() {
 
         const { data: servicesData, error: servicesError } = await supabase
           .from("Services")
-          .select("id, name, provider")
+          .select("id, provider")
           .in("id", serviceIds);
 
         if (servicesError) {
@@ -61,7 +61,6 @@ export default function FavouriteServices() {
           // Transform data to match UI format
           const services = servicesData.map((service) => ({
             id: service.id,
-            name: service.name,
             provider: service.provider,
             image: WorkImage, // Use fallback image since Services table doesn't have image column
           }));
@@ -120,22 +119,13 @@ export default function FavouriteServices() {
             >
               <img
                 src={service.image}
-                alt={service.name}
+                alt={service.provider}
                 className="w-full object-cover rounded-t-[30px]"
                 style={{
                   height: "clamp(180px, 25vw, 231px)",
                   marginBottom: "clamp(8px, 1.5vw, 10px)",
                 }}
               />
-              <span
-                className="text-white mb-2"
-                style={{
-                  fontSize: "clamp(1rem, 2vw, 1.125rem)",
-                  marginLeft: "clamp(15px, 2vw, 21px)",
-                }}
-              >
-                {service.name}
-              </span>
               <span
                 className="text-white"
                 style={{

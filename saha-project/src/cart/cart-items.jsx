@@ -26,11 +26,13 @@ export default function CartItems() {
         if (cartError) {
           console.error("Error fetching cart:", cartError);
           setCartItems([]);
+          setLoading(false);
           return;
         }
 
         if (!cartData || cartData.length === 0) {
           setCartItems([]);
+          setLoading(false);
           return;
         }
 
@@ -40,6 +42,7 @@ export default function CartItems() {
         // If no cart item IDs, set empty cart
         if (cartItemIds.length === 0) {
           setCartItems([]);
+          setLoading(false);
           return;
         }
 
@@ -52,6 +55,7 @@ export default function CartItems() {
         if (cartItemsError) {
           console.error("Error fetching cart items:", cartItemsError);
           setCartItems([]);
+          setLoading(false);
           return;
         }
 
@@ -64,7 +68,7 @@ export default function CartItems() {
         if (serviceIds.length > 0) {
           const { data: servicesData } = await supabase
             .from("Services")
-            .select("id, name, provider, image")
+            .select("id, provider")
             .in("id", serviceIds);
           
           if (servicesData) {
@@ -113,12 +117,12 @@ export default function CartItems() {
                 id: cart.id,
                 cartItemId: cartItem.id,
                 title: service
-                  ? `${service.name}: ${service.provider}`
+                  ? `${cartItem.service || "Service"}: ${service.provider}`
                   : cartItem.service || "Service",
                 serviceList: cartItem.service_list || "",
                 time: date && timeFormatted ? `${date}, ${timeFormatted}` : date || timeFormatted || "",
                 cost: `$${cartItem.cost ? cartItem.cost.toFixed(2) : "0.00"}`,
-                image: service?.image || WorkImage,
+                image: WorkImage,
                 serviceId: cartItem.service_id,
                 date: cartItem.date,
                 timeValue: cartItem.time,
@@ -209,11 +213,11 @@ export default function CartItems() {
           {cartItems.map((item) => (
             <div
               key={item.id}
-              className="flex gap-6 bg-[#161616F0] p-6 rounded-[20px] hover:bg-[#1C1C1C] transition inter-regular"
+              className="flex gap-6 bg-[#161616F0] p-6 rounded-[10px] hover:bg-[#1C1C1C] transition inter-regular border border-solid border-[#434343]"
             >
               <img
                 src={item.image}
-                alt={item.title}
+                alt="Service"
                 className="w-32 h-32 object-cover rounded-lg shrink-0"
               />
               <div className="flex flex-col justify-between flex-1">
@@ -248,7 +252,7 @@ export default function CartItems() {
             </div>
           ))}
           <button
-            className="flex items-center justify-center bg-[#161616F0] text-white text-base font-semibold py-4 rounded-[20px] hover:bg-[#1C1C1C] transition mt-4"
+            className="flex items-center justify-center bg-[#161616F0] text-white text-base font-semibold py-4 rounded-[10px] hover:bg-[#1C1C1C] transition mt-4 border border-solid border-[#434343]"
             onClick={() => (window.location.href = "/service")}
           >
             + Add More Services
