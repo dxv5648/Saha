@@ -1,4 +1,7 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../auth/AuthProvider";
+import supabase from "../supabase-client";
 import Face from "../assets/Face.jpg";
 
 export default function ProfileHeader() {
@@ -6,11 +9,48 @@ export default function ProfileHeader() {
   const [name, setName] = useState("John Williams");
   const [location, setLocation] = useState("Auckland, New Zealand");
   const [profileImage, setProfileImage] = useState(Face);
+  const [isSaving, setIsSaving] = useState(false);
   const fileInputRef = useRef(null);
+  const navigate = useNavigate();
+  const { user, signOut } = useAuth();
+  const [selectedFile, setSelectedFile] = useState(null);
+
+  // Load profile data from database on mount
+  useEffect(() => {
+    const loadProfileData = async () => {
+      if (!user) return;
+
+      try {
+        const { data, error } = await supabase
+          .from("personal_details")
+          .select("name, location, profile_image_url")
+          .eq("user_id", user.id)
+          .single();
+
+        if (error && error.code !== "PGRST116") {
+          console.error("Error loading profile:", error);
+          return;
+        }
+
+        if (data) {
+          setName(data.name || "John Williams");
+          setLocation(data.location || "Auckland, New Zealand");
+          if (data.profile_image_url) {
+            setProfileImage(data.profile_image_url);
+          }
+        }
+      } catch (error) {
+        console.error("Error loading profile:", error);
+      }
+    };
+
+    loadProfileData();
+  }, [user]);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      setSelectedFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setProfileImage(reader.result);
@@ -19,12 +59,95 @@ export default function ProfileHeader() {
     }
   };
 
-  const handleSave = () => {
-    setIsEditing(false);
+  const uploadProfileImage = async () => {
+    if (!selectedFile || !user) {
+      return null;
+    }
+
+    try {
+      const fileExt = selectedFile.name.split(".").pop();
+      const fileName = `${user.id}_${Date.now()}.${fileExt}`;
+      const filePath = `profile-images/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("profile-images")
+        .upload(filePath, selectedFile, {
+          upsert: true,
+          cacheControl: "3600",
+        });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { data } = supabase.storage
+        .from("profile-images")
+        .getPublicUrl(filePath);
+
+      return data.publicUrl;
+    } catch (error) {
+      console.error("Image upload error:", error);
+      throw new Error("Failed to upload image: " + error.message);
+    }
   };
 
-  const handleCancel = () => {
-    setIsEditing(false);
+  const saveProfileData = async () => {
+    if (!user) {
+      alert("User not authenticated");
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+
+      let imageUrl = profileImage;
+      if (selectedFile) {
+        imageUrl = await uploadProfileImage();
+        setSelectedFile(null);
+      }
+
+      // Check if personal_details record exists
+      const { data: existingData } = await supabase
+        .from("personal_details")
+        .select("id")
+        .eq("user_id", user.id)
+        .single();
+
+      let error;
+      if (existingData) {
+        // Update existing record
+        ({ error } = await supabase
+          .from("personal_details")
+          .update({
+            name: name,
+            location: location,
+            profile_image_url: imageUrl,
+          })
+          .eq("user_id", user.id));
+      } else {
+        // Insert new record
+        ({ error } = await supabase.from("personal_details").insert({
+          user_id: user.id,
+          name: name,
+          location: location,
+          profile_image_url: imageUrl,
+        }));
+      }
+
+      if (error) {
+        console.error("Error saving profile:", error);
+        alert("Failed to save profile: " + error.message);
+        return;
+      }
+
+      alert("Profile saved successfully!");
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Error saving profile:", error);
+      alert(error.message || "Error saving profile. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -116,22 +239,27 @@ export default function ProfileHeader() {
           {isEditing ? (
             <>
               <button
-                className="bg-white inter-regular text-black rounded-[20px] border-0 cursor-pointer hover:bg-gray-100 w-full sm:w-auto"
+                className="bg-white inter-regular text-black rounded-[20px] border-0 cursor-pointer hover:bg-gray-100 w-full sm:w-auto disabled:bg-gray-400 disabled:cursor-not-allowed"
                 style={{
                   fontSize: "clamp(0.875rem, 2vw, 1.125rem)",
                   padding: "clamp(12px, 2vw, 16px) clamp(30px, 4vw, 44px)",
                 }}
-                onClick={handleSave}
+                onClick={saveProfileData}
+                disabled={isSaving}
               >
-                Save
+                {isSaving ? "Saving..." : "Save"}
               </button>
               <button
-                className="bg-[#404040] inter-regular text-white rounded-[20px] border-0 cursor-pointer hover:bg-[#505050] w-full sm:w-auto"
+                className="bg-[#404040] inter-regular text-white rounded-[20px] border-0 cursor-pointer hover:bg-[#505050] w-full sm:w-auto disabled:bg-gray-600"
                 style={{
                   fontSize: "clamp(0.875rem, 2vw, 1.125rem)",
                   padding: "clamp(12px, 2vw, 16px) clamp(30px, 4vw, 44px)",
                 }}
-                onClick={handleCancel}
+                onClick={() => {
+                  setIsEditing(false);
+                  setSelectedFile(null);
+                }}
+                disabled={isSaving}
               >
                 Cancel
               </button>
@@ -152,11 +280,24 @@ export default function ProfileHeader() {
                 className="bg-white inter-regular text-black rounded-[20px] border-0 cursor-pointer hover:bg-gray-100 w-full sm:w-auto"
                 style={{
                   fontSize: "clamp(0.875rem, 2vw, 1.125rem)",
-                  padding: "clamp(12px, 2vw, 16px) clamp(30px, 4vw, 51px)",
+                  padding: "clamp(12px, 2vw, 16px) clamp(30px, 4vw, 44px)",
                 }}
                 onClick={() => alert("Pressed!")}
               >
                 Settings
+              </button>
+              <button
+                className="bg-[#5a2a2a] inter-regular text-white rounded-[20px] border-0 cursor-pointer hover:bg-[#7a3a3a] w-full sm:w-auto"
+                style={{
+                  fontSize: "clamp(0.875rem, 2vw, 1.125rem)",
+                  padding: "clamp(12px, 2vw, 16px) clamp(30px, 4vw, 44px)",
+                }}
+                onClick={() => {
+                  signOut();
+                  navigate("/");
+                }}
+              >
+                Logout
               </button>
             </>
           )}

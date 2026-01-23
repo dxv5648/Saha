@@ -31,6 +31,9 @@ export default function ServicePost() {
   const [provider, setProvider] = useState("");
   const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
+  const [image, setImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
   const [services, setServices] = useState([
     { service_list: "", service_price: "" },
   ]);
@@ -51,6 +54,52 @@ export default function ServicePost() {
     setServices(updatedServices);
   };
 
+  const handleImageChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImage(file);
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const uploadImage = async () => {
+    if (!image) {
+      return null;
+    }
+
+    try {
+      const fileExt = image.name.split(".").pop();
+      const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const filePath = `service-images/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("service-images")
+        .upload(filePath, image, {
+          upsert: true,
+          cacheControl: "3600",
+        });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      // Get public URL
+      const { data } = supabase.storage
+        .from("service-images")
+        .getPublicUrl(filePath);
+
+      return data.publicUrl;
+    } catch (err) {
+      console.error("Image upload error:", err);
+      throw new Error("Failed to upload image: " + err.message);
+    }
+  };
+
   const addService = async () => {
     // Validation
     if (!name.trim()) {
@@ -67,6 +116,10 @@ export default function ServicePost() {
     }
     if (!description.trim()) {
       alert("Please enter a description");
+      return;
+    }
+    if (!image) {
+      alert("Please select an image for the service");
       return;
     }
 
@@ -95,33 +148,48 @@ export default function ServicePost() {
     const rating = (Math.random() * 1.0 + 4.0).toFixed(1);
     const reviews = Math.floor(Math.random() * 251 + 50);
 
-    const newServiceData = {
-      name: name.trim(),
-      provider: provider.trim(),
-      category: category,
-      description: description.trim(),
-      service_list: serviceListArray.join(","),
-      service_price: servicePriceArray.join(","),
-      rating: parseFloat(rating),
-      reviews: reviews,
-    };
+    try {
+      setIsUploading(true);
 
-    const { data, error } = await supabase
-      .from("Services")
-      .insert([newServiceData])
-      .single();
-    if (error) {
-      console.error(error);
-      alert("Error adding service: " + error.message);
-    } else {
-      setServiceName((prev) => [...prev, data]);
-      // Reset all fields
-      setName("");
-      setProvider("");
-      setCategory("");
-      setDescription("");
-      setServices([{ service_list: "", service_price: "" }]);
-      alert("Service added successfully!");
+      // Upload image first
+      const imageUrl = await uploadImage();
+
+      const newServiceData = {
+        name: name.trim(),
+        provider: provider.trim(),
+        category: category,
+        description: description.trim(),
+        service_list: serviceListArray.join(","),
+        service_price: servicePriceArray.join(","),
+        image_url: imageUrl,
+        rating: parseFloat(rating),
+        reviews: reviews,
+      };
+
+      const { data, error } = await supabase
+        .from("Services")
+        .insert([newServiceData])
+        .single();
+      if (error) {
+        console.error(error);
+        alert("Error adding service: " + error.message);
+      } else {
+        setServiceName((prev) => [...prev, data]);
+        // Reset all fields
+        setName("");
+        setProvider("");
+        setCategory("");
+        setDescription("");
+        setImage(null);
+        setImagePreview(null);
+        setServices([{ service_list: "", service_price: "" }]);
+        alert("Service added successfully!");
+      }
+    } catch (err) {
+      console.error("Error adding service:", err);
+      alert(err.message || "Error adding service. Please try again.");
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -134,7 +202,7 @@ export default function ServicePost() {
         <div className="flex flex-col gap-6 w-full">
           <div>
             <label className="block mb-2 text-[#D1D1D1] text-sm inter-semi-bold">
-              Name *
+              Service Name *
             </label>
             <input
               type="text"
@@ -208,6 +276,35 @@ export default function ServicePost() {
           </div>
 
           <div>
+            <label className="block mb-2 text-[#D1D1D1] text-sm inter-semi-bold">
+              Service Image *
+            </label>
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="w-full bg-[#1C1C1CB0] text-white inter-regular rounded-[10px] border border-solid border-[#434343] outline-none focus:border-[#666] file:bg-[#434343] file:border-0 file:text-white file:px-3 file:py-2 file:rounded-[8px] file:cursor-pointer file:mr-3 transition-colors"
+                  style={{
+                    fontSize: "clamp(0.75rem, 2vw, 1rem)",
+                    padding: "clamp(12px, 2vw, 15px)",
+                  }}
+                />
+              </div>
+            </div>
+            {imagePreview && (
+              <div className="mt-4 rounded-[10px] overflow-hidden border border-solid border-[#434343]">
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  className="w-full h-48 object-cover"
+                />
+              </div>
+            )}
+          </div>
+
+          <div>
             <div className="flex justify-between items-center mb-3">
               <label className="block text-[#D1D1D1] text-sm inter-semi-bold">
                 Services *
@@ -253,7 +350,7 @@ export default function ServicePost() {
                         updateServiceEntry(
                           index,
                           "service_list",
-                          e.target.value
+                          e.target.value,
                         )
                       }
                       className="w-full bg-[#1C1C1CB0] text-white placeholder:text-gray-400 inter-regular rounded-[10px] border border-solid border-[#434343] outline-none focus:border-[#666] transition-colors"
@@ -273,7 +370,7 @@ export default function ServicePost() {
                         updateServiceEntry(
                           index,
                           "service_price",
-                          e.target.value
+                          e.target.value,
                         )
                       }
                       className="w-full bg-[#1C1C1CB0] text-white placeholder:text-gray-400 inter-regular rounded-[10px] border border-solid border-[#434343] outline-none focus:border-[#666] transition-colors"
@@ -290,14 +387,15 @@ export default function ServicePost() {
 
           <button
             onClick={addService}
-            className="bg-white hover:bg-gray-100 text-black w-full rounded-[10px] border-0 cursor-pointer inter-semi-bold transition-colors active:scale-95 transform"
+            disabled={isUploading}
+            className="bg-white hover:bg-gray-100 disabled:bg-gray-400 disabled:cursor-not-allowed text-black w-full rounded-[10px] border-0 cursor-pointer inter-semi-bold transition-colors active:scale-95 transform"
             style={{
               fontSize: "clamp(1rem, 2vw, 1.125rem)",
               padding: "clamp(12px, 2vw, 16px)",
               marginTop: "clamp(8px, 1.5vw, 12px)",
             }}
           >
-            Post Service
+            {isUploading ? "Uploading..." : "Post Service"}
           </button>
         </div>
       </div>

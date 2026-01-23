@@ -26,8 +26,9 @@ export default function Home() {
     <div className="bg-black min-h-screen min-w-screen flex flex-col">
       <Header />
       <Body />
-      <Footer className="mt-auto" />
       <ServicePost />
+      <Footer className="mt-auto" />
+     
     </div>
   );
 }
