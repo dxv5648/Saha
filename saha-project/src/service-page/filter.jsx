@@ -8,6 +8,10 @@ export default function filter({
   onCategoryChange = () => {},
   sortBy = "Featured",
   onSortChange = () => {},
+  isCompareMode = false,
+  onCompareClick = () => {},
+  selectedCount = 0,
+  onConfirmCompare = () => {},
 }) {
   const [showCategories, setShowCategories] = useState(false);
   const [showSort, setShowSort] = useState(false);
@@ -35,16 +39,34 @@ export default function filter({
             >
               {"Find The Perfect Service"}
             </span>
-            <button
-              className="bg-white inter-regular text-black rounded-[20px] border-0 cursor-pointer hover:bg-gray-100 whitespace-nowrap"
-              style={{
-                fontSize: "clamp(0.875rem, 2vw, 1.125rem)",
-                padding: "clamp(12px, 2vw, 16px) clamp(30px, 5vw, 96px)",
-              }}
-              onClick={() => alert("Pressed!")}
-            >
-              {"Compare"}
-            </button>
+            <div className="flex items-center gap-2">
+              {isCompareMode && (
+                <button
+                  className="bg-green-600 inter-regular text-white rounded-[20px] border-0 cursor-pointer hover:bg-green-700 whitespace-nowrap"
+                  style={{
+                    fontSize: "clamp(0.875rem, 2vw, 1.125rem)",
+                    padding: "clamp(12px, 2vw, 16px) clamp(20px, 4vw, 40px)",
+                  }}
+                  onClick={onConfirmCompare}
+                >
+                  {`Confirm Compare (${selectedCount}/3)`}
+                </button>
+              )}
+              <button
+                className={`inter-regular rounded-[20px] border-0 cursor-pointer whitespace-nowrap ${
+                  isCompareMode
+                    ? "bg-red-600 hover:bg-red-700 text-white"
+                    : "bg-white hover:bg-gray-100 text-black"
+                }`}
+                style={{
+                  fontSize: "clamp(0.875rem, 2vw, 1.125rem)",
+                  padding: "clamp(12px, 2vw, 16px) clamp(30px, 5vw, 96px)",
+                }}
+                onClick={onCompareClick}
+              >
+                {isCompareMode ? "Cancel Compare" : "Compare"}
+              </button>
+            </div>
           </div>
           <span
             className="text-white inter-regular mb-7.5"
