@@ -8,6 +8,7 @@ import Profile from "./profile-page/profile.jsx";
 import Service from "./service-page/service.jsx";
 import ServiceExpand from "./service-expand-page/service-expand.jsx";
 import Cart from "./cart/cart.jsx";
+import Payment from "./payment/payment.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -20,6 +21,7 @@ createRoot(document.getElementById("root")).render(
           <Route path="/service/:serviceId" element={<ServiceExpand />} />
           <Route path="/Service-Expand" element={<ServiceExpand />} />
           <Route path="/Cart" element={<Cart />} />
+          <Route path="/payment" element={<Payment />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

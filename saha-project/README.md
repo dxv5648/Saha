@@ -11,6 +11,7 @@ This project uses Supabase Auth in a popup modal opened from the header **Login*
 ```bash
 VITE_SUPABASE_URL=your-project-url
 VITE_SUPABASE_KEY=your-anon-public-key
+VITE_STRIPE_PUBLISHABLE_KEY=your-stripe-publishable-key
 ```
 
 4. Enable **Google** provider under **Authentication → Providers**:
@@ -18,6 +19,47 @@ VITE_SUPABASE_KEY=your-anon-public-key
    - Add your **Client ID** (from Google Cloud Console)
    - Add your **Client Secret** (from Google Cloud Console)
 5. Add your local URL to allowed redirect URLs (typically `http://localhost:5173`)
+
+## Stripe Payment Integration
+
+The payment page is integrated with Stripe Checkout. To enable payments:
+
+1. Create a Stripe account at [stripe.com](https://stripe.com)
+2. Get your **Publishable Key** from the Stripe Dashboard
+3. Add it to your `.env` file as `VITE_STRIPE_PUBLISHABLE_KEY`
+4. Create a backend endpoint at `/api/create-checkout-session` that:
+   - Creates a Stripe Checkout Session
+   - Returns the `sessionId` to the frontend
+   - Handles payment success/cancel callbacks
+
+Example backend endpoint (Node.js/Express):
+```javascript
+app.post('/api/create-checkout-session', async (req, res) => {
+  const { amount, currency, userId, successUrl, cancelUrl } = req.body;
+  
+  const session = await stripe.checkout.sessions.create({
+    payment_method_types: ['card'],
+    line_items: [{
+      price_data: {
+        currency: currency || 'usd',
+        product_data: {
+          name: 'Service Booking',
+        },
+        unit_amount: amount,
+      },
+      quantity: 1,
+    }],
+    mode: 'payment',
+    success_url: successUrl,
+    cancel_url: cancelUrl,
+    metadata: {
+      userId: userId,
+    },
+  });
+  
+  res.json({ sessionId: session.id });
+});
+```
 
 # React + Vite
 
