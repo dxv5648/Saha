@@ -5,6 +5,15 @@ import supabase from "../supabase-client";
 import Footer from "../home-page/footer.jsx";
 import Header from "../home-page/header.jsx";
 import Background from "../home-page/background.jsx";
+import { loadStripe } from "@stripe/stripe-js";
+import {
+  Elements,
+  CardNumberElement,
+  CardExpiryElement,
+  CardCvcElement,
+  useStripe,
+  useElements,
+} from "@stripe/react-stripe-js";
 
 export default function Payment() {
   return (
@@ -152,7 +161,7 @@ function Body() {
                     </div>
                   </div>
 
-                  <CheckoutForm total={total} />
+                  <StripeElementsWrapper total={total} />
                 </div>
               )}
             </div>
@@ -163,64 +172,129 @@ function Body() {
   );
 }
 
+// Initialize Stripe
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
+
+// Stripe Elements wrapper component
+function StripeElementsWrapper({ total }) {
+  return (
+    <Elements
+      stripe={stripePromise}
+      options={{
+        appearance: {
+          theme: "night",
+          variables: {
+            colorPrimary: "#ffffff",
+            colorBackground: "#161616",
+            colorText: "#ffffff",
+            colorDanger: "#ef4444",
+            fontFamily: "system-ui, sans-serif",
+            spacingUnit: "4px",
+            borderRadius: "10px",
+          },
+        },
+      }}
+    >
+      <CheckoutForm total={total} />
+    </Elements>
+  );
+}
+
 function CheckoutForm({ total }) {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const stripe = useStripe();
+  const elements = useElements();
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState(null);
+  const [cardError, setCardError] = useState(null);
 
-  const handleCheckout = async () => {
+  // Convert NZD amount to cents (smallest currency unit)
+  // For NZD: 1 NZD = 100 cents
+  // So 20.00 NZD = 2000 cents, 30.00 NZD = 3000 cents
+  const amountInCents = Math.round(total * 100);
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
     if (!user) {
       alert("Please login to proceed with payment");
       return;
     }
 
+    if (!stripe || !elements) {
+      return;
+    }
+
     setProcessing(true);
     setError(null);
+    setCardError(null);
+
+    const cardNumberElement = elements.getElement(CardNumberElement);
+    const cardExpiryElement = elements.getElement(CardExpiryElement);
+    const cardCvcElement = elements.getElement(CardCvcElement);
+
+    if (!cardNumberElement || !cardExpiryElement || !cardCvcElement) {
+      setError("Card elements not loaded. Please refresh the page.");
+      setProcessing(false);
+      return;
+    }
 
     try {
-      // Create Stripe Checkout Session
-      // You need to create a backend endpoint that creates a Stripe Checkout Session
-      // Example endpoint: POST /api/create-checkout-session
-      const response = await fetch("/api/create-checkout-session", {
+      // Step 1: Create Payment Intent on backend
+      const response = await fetch("/api/create-payment-intent", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          amount: Math.round(total * 100), // Convert to cents
-          currency: "usd",
+          amount: amountInCents, // Amount in cents (e.g., 2000 for 20.00 NZD)
+          currency: "nzd", // New Zealand Dollar
           userId: user.id,
-          successUrl: `${window.location.origin}/payment-success`,
-          cancelUrl: `${window.location.origin}/payment`,
         }),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to create checkout session");
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.error || "Failed to create payment intent"
+        );
       }
 
-      const { sessionId } = await response.json();
+      const { clientSecret } = await response.json();
 
-      // Redirect to Stripe Checkout
-      const stripe = await import("@stripe/stripe-js").then(
-        (mod) => mod.loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY)
-      );
-
-      if (!stripe) {
-        throw new Error("Stripe failed to load");
+      if (!clientSecret) {
+        throw new Error("No client secret returned from server");
       }
 
-      const { error: stripeError } = await stripe.redirectToCheckout({
-        sessionId: sessionId,
-      });
+      // Step 2: Confirm payment with Stripe
+      const { error: confirmError, paymentIntent } =
+        await stripe.confirmCardPayment(clientSecret, {
+          payment_method: {
+            card: cardNumberElement,
+            billing_details: {
+              // You can add user details here if available
+            },
+          },
+        });
 
-      if (stripeError) {
-        setError(stripeError.message);
+      if (confirmError) {
+        setCardError(confirmError.message);
+        setProcessing(false);
+        return;
+      }
+
+      if (paymentIntent && paymentIntent.status === "succeeded") {
+        // Payment successful - redirect to success page
+        navigate("/payment-success", {
+          state: { paymentIntentId: paymentIntent.id },
+        });
+      } else {
+        setError("Payment was not completed. Please try again.");
         setProcessing(false);
       }
     } catch (err) {
-      console.error("Checkout error:", err);
+      console.error("Payment error:", err);
       setError(
         err.message ||
           "Unable to process payment. Please ensure the backend API is configured."
@@ -229,15 +303,52 @@ function CheckoutForm({ total }) {
     }
   };
 
+  const cardElementOptions = {
+    style: {
+      base: {
+        fontSize: "16px",
+        color: "#ffffff",
+        "::placeholder": {
+          color: "#9ca3af",
+        },
+        fontFamily: "system-ui, sans-serif",
+      },
+      invalid: {
+        color: "#ef4444",
+        iconColor: "#ef4444",
+      },
+    },
+  };
+
   return (
-    <div className="space-y-6">
-      <div className="bg-blue-500/20 border border-blue-500 text-blue-200 px-4 py-3 rounded-[10px] text-sm">
-        <p className="font-semibold mb-2">Setup Instructions:</p>
-        <p className="text-xs">
-          To enable payments, create a backend endpoint at{" "}
-          <code className="bg-black/30 px-1 rounded">/api/create-checkout-session</code>{" "}
-          that creates a Stripe Checkout Session. See Stripe documentation for details.
-        </p>
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-4">
+        <div>
+          <label className="block text-[#D1D1D1] text-sm mb-2">
+            Card Number
+          </label>
+          <div className="bg-[#1C1C1C] border border-[#434343] rounded-[10px] p-4">
+            <CardNumberElement options={cardElementOptions} />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-[#D1D1D1] text-sm mb-2">
+              Expiry Date
+            </label>
+            <div className="bg-[#1C1C1C] border border-[#434343] rounded-[10px] p-4">
+              <CardExpiryElement options={cardElementOptions} />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-[#D1D1D1] text-sm mb-2">CVC</label>
+            <div className="bg-[#1C1C1C] border border-[#434343] rounded-[10px] p-4">
+              <CardCvcElement options={cardElementOptions} />
+            </div>
+          </div>
+        </div>
       </div>
 
       {error && (
@@ -246,13 +357,36 @@ function CheckoutForm({ total }) {
         </div>
       )}
 
+      {cardError && (
+        <div className="bg-red-500/20 border border-red-500 text-red-200 px-4 py-3 rounded-[10px] text-sm">
+          {cardError}
+        </div>
+      )}
+
+      <div className="bg-blue-500/20 border border-blue-500 text-blue-200 px-4 py-3 rounded-[10px] text-sm">
+        <p className="font-semibold mb-2">Setup Instructions:</p>
+        <p className="text-xs">
+          To enable payments, create a backend endpoint at{" "}
+          <code className="bg-black/30 px-1 rounded">
+            /api/create-payment-intent
+          </code>{" "}
+          that creates a Stripe Payment Intent. The endpoint should return{" "}
+          <code className="bg-black/30 px-1 rounded">clientSecret</code>. See
+          Stripe documentation for details.
+        </p>
+        <p className="text-xs mt-2">
+          <strong>Amount format:</strong> The amount is sent in cents (e.g.,{" "}
+          {amountInCents} cents for ${total.toFixed(2)} NZD). Ensure your
+          backend correctly handles NZD currency.
+        </p>
+      </div>
+
       <button
-        type="button"
-        onClick={handleCheckout}
-        disabled={processing}
+        type="submit"
+        disabled={processing || !stripe}
         className="w-full bg-white text-black text-base py-4 rounded-[10px] hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed font-medium"
       >
-        {processing ? "Processing..." : `Pay $${total.toFixed(2)}`}
+        {processing ? "Processing..." : `Pay $${total.toFixed(2)} NZD`}
       </button>
 
       <button
@@ -262,6 +396,6 @@ function CheckoutForm({ total }) {
       >
         Back to Cart
       </button>
-    </div>
+    </form>
   );
 }
