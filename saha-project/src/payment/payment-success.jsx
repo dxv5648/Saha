@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import supabase from "../supabase-client";
 import Footer from "../home-page/footer.jsx";
@@ -9,28 +9,45 @@ import Background from "../home-page/background.jsx";
 export default function PaymentSuccess() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const { user } = useAuth();
 
-  // 从 Stripe 重定向回来（如 3DS）时，清空购物车
+  // 支付成功后清空购物车：Stripe 成功时会重定向到 return_url，promise 不会 resolve，所以只能在这里清
   useEffect(() => {
     const redirectStatus = searchParams.get("redirect_status");
     const clientSecret = searchParams.get("payment_intent_client_secret");
-    if (
-      redirectStatus === "succeeded" &&
-      clientSecret &&
-      user?.id
-    ) {
-      supabase
-        .from("Cart")
-        .select("id")
-        .eq("user_id", user.id)
-        .then(({ data, error }) => {
-          if (!error && data?.length) {
-            supabase.from("Cart").delete().in("id", data.map((c) => c.id));
-          }
-        });
-    }
-  }, [searchParams, user?.id]);
+    const fromPayment = location.state?.fromPayment === true;
+    const shouldClear =
+      (redirectStatus === "succeeded" && clientSecret) || fromPayment;
+
+    if (!shouldClear || !user?.id) return;
+
+    const clearCart = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("Cart")
+          .select("id")
+          .eq("user_id", user.id);
+        if (error) {
+          console.error("Error fetching cart for clear:", error);
+          return;
+        }
+        if (!data || data.length === 0) return;
+        const ids = data.map((c) => c.id);
+        const { error: delError } = await supabase
+          .from("Cart")
+          .delete()
+          .in("id", ids);
+        if (delError) {
+          console.error("Error clearing cart after payment:", delError);
+        }
+      } catch (e) {
+        console.error("Error in clearCart:", e);
+      }
+    };
+
+    clearCart();
+  }, [searchParams, user?.id, location.state]);
 
   return (
     <div className="bg-black min-h-screen min-w-screen flex flex-col">

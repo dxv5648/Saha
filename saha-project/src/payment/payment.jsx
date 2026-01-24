@@ -170,10 +170,8 @@ function Body() {
   );
 }
 
-// Initialize Stripe — locale "en" so card labels (Card number, Expiration date, etc.) show in English
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY, {
-  locale: "en",
-});
+// Initialize Stripe
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
 const appearance = {
   theme: "night",
@@ -256,7 +254,7 @@ function StripeElementsWrapper({ total, user }) {
   return (
     <Elements
       stripe={stripePromise}
-      options={{ clientSecret, appearance, locale: "en" }}
+      options={{ clientSecret, appearance }}
     >
       <CheckoutForm total={total} clientSecret={clientSecret} />
     </Elements>
@@ -306,7 +304,7 @@ function CheckoutForm({ total, clientSecret }) {
         return;
       }
 
-      // confirmPayment resolved without redirect (e.g. card without 3DS) — clear cart and go to success
+      // 若 confirmPayment 未重定向（少见）：先清空购物车再跳转；常见为 Stripe 直接重定向，由 payment-success 清空
       try {
         const { data: cartData, error: cartError } = await supabase
           .from("Cart")
@@ -315,12 +313,16 @@ function CheckoutForm({ total, clientSecret }) {
 
         if (!cartError && cartData && cartData.length > 0) {
           const cartIds = cartData.map((c) => c.id);
-          await supabase.from("Cart").delete().in("id", cartIds);
+          const { error: delErr } = await supabase
+            .from("Cart")
+            .delete()
+            .in("id", cartIds);
+          if (delErr) console.error("Error clearing cart:", delErr);
         }
       } catch (clearErr) {
         console.error("Error clearing cart:", clearErr);
       }
-      navigate("/payment-success");
+      navigate("/payment-success", { state: { fromPayment: true } });
     } catch (err) {
       console.error("Payment error:", err);
       setError(err.message || "Unable to process payment. Please try again.");
