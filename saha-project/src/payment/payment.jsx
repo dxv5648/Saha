@@ -8,9 +8,7 @@ import Background from "../home-page/background.jsx";
 import { loadStripe } from "@stripe/stripe-js";
 import {
   Elements,
-  CardNumberElement,
-  CardExpiryElement,
-  CardCvcElement,
+  PaymentElement,
   useStripe,
   useElements,
 } from "@stripe/react-stripe-js";
@@ -157,11 +155,11 @@ function Body() {
                     <div className="bg-[#353535] h-px mb-6"></div>
                     <div className="flex justify-between items-center mb-8">
                       <span className="text-white text-lg">Total</span>
-                      <span className="text-white text-2xl">${total.toFixed(2)}</span>
+                      <span className="text-white text-2xl">${total.toFixed(2)} NZD</span>
                     </div>
                   </div>
 
-                  <StripeElementsWrapper total={total} />
+                  <StripeElementsWrapper total={total} user={user} />
                 </div>
               )}
             </div>
@@ -172,47 +170,106 @@ function Body() {
   );
 }
 
-// Initialize Stripe
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
+// Initialize Stripe — locale "en" so card labels (Card number, Expiration date, etc.) show in English
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY, {
+  locale: "en",
+});
 
-// Stripe Elements wrapper component
-function StripeElementsWrapper({ total }) {
+const appearance = {
+  theme: "night",
+  variables: {
+    colorPrimary: "#ffffff",
+    colorBackground: "#1a1a1a",
+    colorText: "#ffffff",
+    colorDanger: "#ef4444",
+    fontFamily: "system-ui, sans-serif",
+    spacingUnit: "4px",
+    borderRadius: "10px",
+  },
+};
+
+// Stripe Elements wrapper: create PaymentIntent first, then render Payment Element
+function StripeElementsWrapper({ total, user }) {
+  const [clientSecret, setClientSecret] = useState("");
+  const [intentLoading, setIntentLoading] = useState(true);
+  const [intentError, setIntentError] = useState(null);
+
+  useEffect(() => {
+    if (!total || total <= 0) {
+      setIntentLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setIntentLoading(true);
+    setIntentError(null);
+
+    const createIntent = async () => {
+      try {
+        const amountInCents = Math.round(total * 100);
+        const res = await fetch("/api/create-payment-intent", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            amount: amountInCents,
+            currency: "nzd",
+            userId: user?.id,
+          }),
+        });
+
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error || "Failed to create payment intent");
+        }
+
+        const { clientSecret: secret } = await res.json();
+        if (!cancelled && secret) setClientSecret(secret);
+      } catch (e) {
+        if (!cancelled) setIntentError(e.message);
+      } finally {
+        if (!cancelled) setIntentLoading(false);
+      }
+    };
+
+    createIntent();
+    return () => { cancelled = true; };
+  }, [total, user?.id]);
+
+  if (intentLoading) {
+    return (
+      <div className="py-6 text-center">
+        <span className="text-[#D1D1D1]">Loading payment form...</span>
+      </div>
+    );
+  }
+
+  if (intentError) {
+    return (
+      <div className="bg-red-500/20 border border-red-500 text-red-200 px-4 py-3 rounded-[10px] text-sm">
+        {intentError}
+      </div>
+    );
+  }
+
+  if (!clientSecret) return null;
+
   return (
     <Elements
       stripe={stripePromise}
-      options={{
-        appearance: {
-          theme: "night",
-          variables: {
-            colorPrimary: "#ffffff",
-            colorBackground: "#161616",
-            colorText: "#ffffff",
-            colorDanger: "#ef4444",
-            fontFamily: "system-ui, sans-serif",
-            spacingUnit: "4px",
-            borderRadius: "10px",
-          },
-        },
-      }}
+      options={{ clientSecret, appearance, locale: "en" }}
     >
-      <CheckoutForm total={total} />
+      <CheckoutForm total={total} clientSecret={clientSecret} />
     </Elements>
   );
 }
 
-function CheckoutForm({ total }) {
+function CheckoutForm({ total, clientSecret }) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const stripe = useStripe();
   const elements = useElements();
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState(null);
-  const [cardError, setCardError] = useState(null);
-
-  // Convert NZD amount to cents (smallest currency unit)
-  // For NZD: 1 NZD = 100 cents
-  // So 20.00 NZD = 2000 cents, 30.00 NZD = 3000 cents
-  const amountInCents = Math.round(total * 100);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -222,163 +279,59 @@ function CheckoutForm({ total }) {
       return;
     }
 
-    if (!stripe || !elements) {
-      return;
-    }
+    if (!stripe || !elements) return;
 
     setProcessing(true);
     setError(null);
-    setCardError(null);
-
-    const cardNumberElement = elements.getElement(CardNumberElement);
-    const cardExpiryElement = elements.getElement(CardExpiryElement);
-    const cardCvcElement = elements.getElement(CardCvcElement);
-
-    if (!cardNumberElement || !cardExpiryElement || !cardCvcElement) {
-      setError("Card elements not loaded. Please refresh the page.");
-      setProcessing(false);
-      return;
-    }
 
     try {
-      // Step 1: Create Payment Intent on backend
-      // Uses Vite proxy in development, or VITE_API_URL in production
-      const response = await fetch("/api/create-payment-intent", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          amount: amountInCents, // Amount in cents (e.g., 2000 for 20.00 NZD)
-          currency: "nzd", // New Zealand Dollar
-          userId: user.id,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(
-          errorData.error || "Failed to create payment intent"
-        );
-      }
-
-      const { clientSecret } = await response.json();
-
-      if (!clientSecret) {
-        throw new Error("No client secret returned from server");
-      }
-
-      // Step 2: Confirm payment with Stripe
-      const { error: confirmError, paymentIntent } =
-        await stripe.confirmCardPayment(clientSecret, {
-          payment_method: {
-            card: cardNumberElement,
-            billing_details: {
-              // You can add user details here if available
-            },
-          },
-        });
-
-      if (confirmError) {
-        setCardError(confirmError.message);
+      const { error: submitError } = await elements.submit();
+      if (submitError) {
+        setError(submitError.message);
         setProcessing(false);
         return;
       }
 
-      if (paymentIntent && paymentIntent.status === "succeeded") {
-        // Payment successful - clear cart and redirect
-        try {
-          // Fetch cart items to clear
-          const { data: cartData, error: cartError } = await supabase
-            .from("Cart")
-            .select("id")
-            .eq("user_id", user.id);
+      const { error: confirmError } = await stripe.confirmPayment({
+        elements,
+        clientSecret,
+        confirmParams: {
+          return_url: `${window.location.origin}/payment-success`,
+        },
+      });
 
-          if (cartError) {
-            console.error("Error fetching cart:", cartError);
-          }
-
-          // Clear cart after successful payment
-          if (cartData && cartData.length > 0) {
-            const cartIds = cartData.map((cart) => cart.id);
-            const { error: deleteError } = await supabase
-              .from("Cart")
-              .delete()
-              .in("id", cartIds);
-
-            if (deleteError) {
-              console.error("Error clearing cart:", deleteError);
-            }
-          }
-
-          // Redirect to success page
-          navigate("/payment-success");
-        } catch (clearErr) {
-          console.error("Error clearing cart:", clearErr);
-          // Still redirect to success page even if cart clearing fails
-          navigate("/payment-success");
-        }
-      } else {
-        // Payment failed - keep cart items and show error
-        setError("Payment was not completed. Please try again.");
+      if (confirmError) {
+        setError(confirmError.message);
         setProcessing(false);
+        return;
       }
+
+      // confirmPayment resolved without redirect (e.g. card without 3DS) — clear cart and go to success
+      try {
+        const { data: cartData, error: cartError } = await supabase
+          .from("Cart")
+          .select("id")
+          .eq("user_id", user.id);
+
+        if (!cartError && cartData && cartData.length > 0) {
+          const cartIds = cartData.map((c) => c.id);
+          await supabase.from("Cart").delete().in("id", cartIds);
+        }
+      } catch (clearErr) {
+        console.error("Error clearing cart:", clearErr);
+      }
+      navigate("/payment-success");
     } catch (err) {
       console.error("Payment error:", err);
-      setError(
-        err.message ||
-          "Unable to process payment. Please ensure the backend API is configured."
-      );
+      setError(err.message || "Unable to process payment. Please try again.");
       setProcessing(false);
     }
   };
 
-  const cardElementOptions = {
-    style: {
-      base: {
-        fontSize: "16px",
-        color: "#ffffff",
-        "::placeholder": {
-          color: "#9ca3af",
-        },
-        fontFamily: "system-ui, sans-serif",
-      },
-      invalid: {
-        color: "#ef4444",
-        iconColor: "#ef4444",
-      },
-    },
-  };
-
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="space-y-4">
-        <div>
-          <label className="block text-[#D1D1D1] text-sm mb-2">
-            Card Number
-          </label>
-          <div className="bg-[#1C1C1C] border border-[#434343] rounded-[10px] p-4">
-            <CardNumberElement options={cardElementOptions} />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-[#D1D1D1] text-sm mb-2">
-              Expiry Date
-            </label>
-            <div className="bg-[#1C1C1C] border border-[#434343] rounded-[10px] p-4">
-              <CardExpiryElement options={cardElementOptions} />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-[#D1D1D1] text-sm mb-2">CVC</label>
-            <div className="bg-[#1C1C1C] border border-[#434343] rounded-[10px] p-4">
-              <CardCvcElement options={cardElementOptions} />
-            </div>
-          </div>
-        </div>
+      <div className="bg-[#1a1a1a] border border-[#434343] rounded-[10px] p-5">
+        <PaymentElement options={{ layout: "accordion" }} />
       </div>
 
       {error && (
@@ -387,15 +340,9 @@ function CheckoutForm({ total }) {
         </div>
       )}
 
-      {cardError && (
-        <div className="bg-red-500/20 border border-red-500 text-red-200 px-4 py-3 rounded-[10px] text-sm">
-          {cardError}
-        </div>
-      )}
-
       <button
         type="submit"
-        disabled={processing || !stripe}
+        disabled={processing || !stripe || !elements}
         className="w-full bg-white text-black text-base py-4 rounded-[10px] hover:bg-gray-100 transition disabled:opacity-50 disabled:cursor-not-allowed font-medium"
       >
         {processing ? "Processing..." : `Pay $${total.toFixed(2)} NZD`}

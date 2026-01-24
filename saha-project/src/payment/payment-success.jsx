@@ -1,10 +1,36 @@
-import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useAuth } from "../auth/AuthProvider";
+import supabase from "../supabase-client";
 import Footer from "../home-page/footer.jsx";
 import Header from "../home-page/header.jsx";
 import Background from "../home-page/background.jsx";
 
 export default function PaymentSuccess() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { user } = useAuth();
+
+  // 从 Stripe 重定向回来（如 3DS）时，清空购物车
+  useEffect(() => {
+    const redirectStatus = searchParams.get("redirect_status");
+    const clientSecret = searchParams.get("payment_intent_client_secret");
+    if (
+      redirectStatus === "succeeded" &&
+      clientSecret &&
+      user?.id
+    ) {
+      supabase
+        .from("Cart")
+        .select("id")
+        .eq("user_id", user.id)
+        .then(({ data, error }) => {
+          if (!error && data?.length) {
+            supabase.from("Cart").delete().in("id", data.map((c) => c.id));
+          }
+        });
+    }
+  }, [searchParams, user?.id]);
 
   return (
     <div className="bg-black min-h-screen min-w-screen flex flex-col">
