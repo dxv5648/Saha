@@ -20,46 +20,65 @@ VITE_STRIPE_PUBLISHABLE_KEY=your-stripe-publishable-key
    - Add your **Client Secret** (from Google Cloud Console)
 5. Add your local URL to allowed redirect URLs (typically `http://localhost:5173`)
 
-## Stripe Payment Integration
+## Stripe Payment Integration with Elements
 
-The payment page is integrated with Stripe Checkout. To enable payments:
+The payment page uses **Stripe Elements** with separate input fields for card number, expiry date, and CVC. Payments are processed using **Payment Intents** (not Checkout Sessions).
+
+### Frontend Setup
 
 1. Create a Stripe account at [stripe.com](https://stripe.com)
 2. Get your **Publishable Key** from the Stripe Dashboard
 3. Add it to your `.env` file as `VITE_STRIPE_PUBLISHABLE_KEY`
-4. Create a backend endpoint at `/api/create-checkout-session` that:
-   - Creates a Stripe Checkout Session
-   - Returns the `sessionId` to the frontend
-   - Handles payment success/cancel callbacks
 
-Example backend endpoint (Node.js/Express):
-```javascript
-app.post('/api/create-checkout-session', async (req, res) => {
-  const { amount, currency, userId, successUrl, cancelUrl } = req.body;
-  
-  const session = await stripe.checkout.sessions.create({
-    payment_method_types: ['card'],
-    line_items: [{
-      price_data: {
-        currency: currency || 'usd',
-        product_data: {
-          name: 'Service Booking',
-        },
-        unit_amount: amount,
-      },
-      quantity: 1,
-    }],
-    mode: 'payment',
-    success_url: successUrl,
-    cancel_url: cancelUrl,
-    metadata: {
-      userId: userId,
-    },
-  });
-  
-  res.json({ sessionId: session.id });
-});
-```
+### Backend Setup
+
+A backend server (`server.js`) is included to handle Payment Intent creation.
+
+1. **Install backend dependencies:**
+   ```bash
+   npm install
+   ```
+
+2. **Set up environment variables:**
+   Create a `.env` file in the project root with:
+   ```bash
+   # Stripe Secret Key (from Stripe Dashboard)
+   STRIPE_SECRET_KEY=sk_test_...
+   
+   # Backend server port (optional, defaults to 3001)
+   PORT=3001
+   
+   # Webhook secret (optional, for webhook handling)
+   STRIPE_WEBHOOK_SECRET=whsec_...
+   ```
+
+3. **Start the backend server:**
+   ```bash
+   npm run server
+   ```
+   The server will run on `http://localhost:3001`
+
+4. **Start the frontend (in a separate terminal):**
+   ```bash
+   npm run dev
+   ```
+   The frontend will run on `http://localhost:5173` and proxy `/api` requests to the backend.
+
+### Payment Flow
+
+1. Frontend sends amount in **cents** (e.g., 3000 cents for $30.00 NZD)
+2. Backend creates a Stripe Payment Intent with the amount and currency (NZD)
+3. Backend returns `clientSecret` to frontend
+4. Frontend confirms payment using Stripe Elements
+5. Payment is processed securely
+
+### Important Notes
+
+- **Amount Format**: All amounts are sent in the smallest currency unit (cents for NZD)
+  - $20.00 NZD = 2000 cents
+  - $30.00 NZD = 3000 cents
+- **Currency**: The system uses NZD (New Zealand Dollar) by default
+- **Security**: Never expose your Stripe Secret Key in frontend code. Always use it on the backend server only.
 
 # React + Vite
 

@@ -242,6 +242,7 @@ function CheckoutForm({ total }) {
 
     try {
       // Step 1: Create Payment Intent on backend
+      // Uses Vite proxy in development, or VITE_API_URL in production
       const response = await fetch("/api/create-payment-intent", {
         method: "POST",
         headers: {
@@ -285,11 +286,40 @@ function CheckoutForm({ total }) {
       }
 
       if (paymentIntent && paymentIntent.status === "succeeded") {
-        // Payment successful - redirect to success page
-        navigate("/payment-success", {
-          state: { paymentIntentId: paymentIntent.id },
-        });
+        // Payment successful - clear cart and redirect
+        try {
+          // Fetch cart items to clear
+          const { data: cartData, error: cartError } = await supabase
+            .from("Cart")
+            .select("id")
+            .eq("user_id", user.id);
+
+          if (cartError) {
+            console.error("Error fetching cart:", cartError);
+          }
+
+          // Clear cart after successful payment
+          if (cartData && cartData.length > 0) {
+            const cartIds = cartData.map((cart) => cart.id);
+            const { error: deleteError } = await supabase
+              .from("Cart")
+              .delete()
+              .in("id", cartIds);
+
+            if (deleteError) {
+              console.error("Error clearing cart:", deleteError);
+            }
+          }
+
+          // Redirect to success page
+          navigate("/payment-success");
+        } catch (clearErr) {
+          console.error("Error clearing cart:", clearErr);
+          // Still redirect to success page even if cart clearing fails
+          navigate("/payment-success");
+        }
       } else {
+        // Payment failed - keep cart items and show error
         setError("Payment was not completed. Please try again.");
         setProcessing(false);
       }
@@ -362,24 +392,6 @@ function CheckoutForm({ total }) {
           {cardError}
         </div>
       )}
-
-      <div className="bg-blue-500/20 border border-blue-500 text-blue-200 px-4 py-3 rounded-[10px] text-sm">
-        <p className="font-semibold mb-2">Setup Instructions:</p>
-        <p className="text-xs">
-          To enable payments, create a backend endpoint at{" "}
-          <code className="bg-black/30 px-1 rounded">
-            /api/create-payment-intent
-          </code>{" "}
-          that creates a Stripe Payment Intent. The endpoint should return{" "}
-          <code className="bg-black/30 px-1 rounded">clientSecret</code>. See
-          Stripe documentation for details.
-        </p>
-        <p className="text-xs mt-2">
-          <strong>Amount format:</strong> The amount is sent in cents (e.g.,{" "}
-          {amountInCents} cents for ${total.toFixed(2)} NZD). Ensure your
-          backend correctly handles NZD currency.
-        </p>
-      </div>
 
       <button
         type="submit"
