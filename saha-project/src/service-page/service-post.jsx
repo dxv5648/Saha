@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import supabase from "../supabase-client";
 
 const CATEGORIES = [
@@ -31,9 +31,18 @@ export default function ServicePost() {
   const [provider, setProvider] = useState("");
   const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
+  const [location, setLocation] = useState("");
+  const [country, setCountry] = useState("New Zealand");
+  const [city, setCity] = useState("");
+  const [region, setRegion] = useState("");
+  const [postalCode, setPostalCode] = useState("");
+  const [locationSuggestions, setLocationSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [locationSelected, setLocationSelected] = useState(false);
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
+  const locationInputRef = useRef(null);
   const [services, setServices] = useState([
     { service_list: "", service_price: "" },
   ]);
@@ -41,6 +50,101 @@ export default function ServicePost() {
   const addServiceEntry = () => {
     setServices([...services, { service_list: "", service_price: "" }]);
   };
+
+  // Handle location input and Google Places autocomplete
+  const handleLocationChange = async (value) => {
+    setLocation(value);
+
+    if (value.length < 3) {
+      setLocationSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    try {
+      // Using OpenStreetMap Nominatim API for geocoding (free, no API key required)
+      // Filter results to New Zealand only using bounding box
+      // NZ bounding box: lat 34.4-47.3, lon 166.4-178.6
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(value)},New Zealand&limit=10`,
+        {
+          headers: {
+            Accept: "application/json",
+          },
+        },
+      );
+      const data = await response.json();
+
+      if (data && Array.isArray(data)) {
+        // Filter to only include results in New Zealand
+        const nzBoundingBox = {
+          minLat: -47.3,
+          maxLat: -34.4,
+          minLon: 166.4,
+          maxLon: 178.6,
+        };
+
+        const suggestions = data
+          .filter((item) => {
+            const lat = parseFloat(item.lat);
+            const lon = parseFloat(item.lon);
+            return (
+              lat >= nzBoundingBox.minLat &&
+              lat <= nzBoundingBox.maxLat &&
+              lon >= nzBoundingBox.minLon &&
+              lon <= nzBoundingBox.maxLon
+            );
+          })
+          .map((item) => ({
+            id: item.place_id,
+            name: item.display_name,
+            lat: item.lat,
+            lon: item.lon,
+            address: item.address,
+          }))
+          .slice(0, 5);
+
+        setLocationSuggestions(suggestions);
+        setShowSuggestions(true);
+      }
+    } catch (error) {
+      console.error("Error fetching location suggestions:", error);
+    }
+  };
+
+  const handleLocationSelect = (suggestion) => {
+    // Extract address components from Nominatim response
+    const address = suggestion.address || {};
+
+    // Extract city and region from address
+    const extractedCity = address.state || address.state_district || "";
+    const extractedRegion = address.county || address.district || "";
+    const extractedPostalCode = address.postcode || "";
+
+    setLocation(suggestion.name);
+    setCity(extractedCity);
+    setRegion(extractedRegion);
+    setPostalCode(extractedPostalCode);
+    setCountry("New Zealand");
+    setLocationSelected(true);
+    setLocationSuggestions([]);
+    setShowSuggestions(false);
+  };
+
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        locationInputRef.current &&
+        !locationInputRef.current.contains(event.target)
+      ) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const removeServiceEntry = (index) => {
     if (services.length > 1) {
@@ -118,6 +222,26 @@ export default function ServicePost() {
       alert("Please enter a description");
       return;
     }
+    if (!location.trim()) {
+      alert("Please enter a location");
+      return;
+    }
+    if (!locationSelected) {
+      alert("Please select a location from the suggestions");
+      return;
+    }
+    if (!country.trim()) {
+      alert("Please enter a country");
+      return;
+    }
+    if (!city.trim()) {
+      alert("Please enter a city");
+      return;
+    }
+    if (!region.trim()) {
+      alert("Please enter a region");
+      return;
+    }
     if (!image) {
       alert("Please select an image for the service");
       return;
@@ -154,11 +278,34 @@ export default function ServicePost() {
       // Upload image first
       const imageUrl = await uploadImage();
 
+      // Create location record first
+      const locationData = {
+        name: location.trim(),
+        city: city.trim(),
+        region: region.trim(),
+        postal_code: postalCode.trim() || null,
+        latitude: 0, // Will be set if needed
+        longitude: 0, // Will be set if needed
+        country: country.trim(),
+        country_code: "NZ",
+      };
+
+      const { data: locationRecord, error: locationError } = await supabase
+        .from("locations")
+        .insert([locationData])
+        .select()
+        .single();
+
+      if (locationError) {
+        throw new Error("Error creating location: " + locationError.message);
+      }
+
       const newServiceData = {
         name: name.trim(),
         provider: provider.trim(),
         category: category,
         description: description.trim(),
+        location_id: locationRecord.id,
         service_list: serviceListArray.join(","),
         service_price: servicePriceArray.join(","),
         image_url: imageUrl,
@@ -180,6 +327,12 @@ export default function ServicePost() {
         setProvider("");
         setCategory("");
         setDescription("");
+        setLocation("");
+        setCountry("New Zealand");
+        setCity("");
+        setRegion("");
+        setPostalCode("");
+        setLocationSelected(false);
         setImage(null);
         setImagePreview(null);
         setServices([{ service_list: "", service_price: "" }]);
@@ -274,6 +427,107 @@ export default function ServicePost() {
               }}
             />
           </div>
+
+          <div ref={locationInputRef} className="relative">
+            <label className="block mb-2 text-[#D1D1D1] text-sm inter-semi-bold">
+              Location Search *
+            </label>
+            <input
+              type="text"
+              placeholder="Enter location (e.g., Auckland, Franklin)"
+              value={location}
+              onChange={(e) => handleLocationChange(e.target.value)}
+              onFocus={() => location.length >= 3 && setShowSuggestions(true)}
+              className="w-full bg-[#1C1C1CB0] text-white placeholder:text-gray-400 inter-regular rounded-[10px] border border-solid border-[#434343] outline-none focus:border-[#666] transition-colors"
+              style={{
+                fontSize: "clamp(0.75rem, 2vw, 1rem)",
+                padding: "clamp(12px, 2vw, 15px)",
+              }}
+            />
+            {showSuggestions && locationSuggestions.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-gradient-to-b from-[#252525] to-[#1C1C1C] border border-solid border-[#434343] rounded-[12px] max-h-80 overflow-y-auto z-50 shadow-lg shadow-black/50 backdrop-blur-sm">
+                {locationSuggestions.map((suggestion, index) => (
+                  <div
+                    key={suggestion.id}
+                    onClick={() => handleLocationSelect(suggestion)}
+                    className={`px-4 py-3 cursor-pointer hover:bg-[#333333] transition-all duration-200 text-white inter-regular text-sm flex items-start gap-2 ${
+                      index !== locationSuggestions.length - 1
+                        ? "border-b border-[#353535]"
+                        : ""
+                    }`}
+                  >
+                    <span className="text-[#666] mt-0.5">📍</span>
+                    <span className="flex-1">{suggestion.name}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {locationSelected && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block mb-2 text-[#D1D1D1] text-sm inter-semi-bold">
+                  Country *
+                </label>
+                <input
+                  type="text"
+                  value={country}
+                  onChange={(e) => setCountry(e.target.value)}
+                  className="w-full bg-[#1C1C1CB0] text-white placeholder:text-gray-400 inter-regular rounded-[10px] border border-solid border-[#434343] outline-none focus:border-[#666] transition-colors"
+                  style={{
+                    fontSize: "clamp(0.75rem, 2vw, 1rem)",
+                    padding: "clamp(12px, 2vw, 15px)",
+                  }}
+                />
+              </div>
+              <div>
+                <label className="block mb-2 text-[#D1D1D1] text-sm inter-semi-bold">
+                  City *
+                </label>
+                <input
+                  type="text"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  className="w-full bg-[#1C1C1CB0] text-white placeholder:text-gray-400 inter-regular rounded-[10px] border border-solid border-[#434343] outline-none focus:border-[#666] transition-colors"
+                  style={{
+                    fontSize: "clamp(0.75rem, 2vw, 1rem)",
+                    padding: "clamp(12px, 2vw, 15px)",
+                  }}
+                />
+              </div>
+              <div>
+                <label className="block mb-2 text-[#D1D1D1] text-sm inter-semi-bold">
+                  Region *
+                </label>
+                <input
+                  type="text"
+                  value={region}
+                  onChange={(e) => setRegion(e.target.value)}
+                  className="w-full bg-[#1C1C1CB0] text-white placeholder:text-gray-400 inter-regular rounded-[10px] border border-solid border-[#434343] outline-none focus:border-[#666] transition-colors"
+                  style={{
+                    fontSize: "clamp(0.75rem, 2vw, 1rem)",
+                    padding: "clamp(12px, 2vw, 15px)",
+                  }}
+                />
+              </div>
+              <div>
+                <label className="block mb-2 text-[#D1D1D1] text-sm inter-semi-bold">
+                  Postal Code
+                </label>
+                <input
+                  type="text"
+                  value={postalCode}
+                  onChange={(e) => setPostalCode(e.target.value)}
+                  className="w-full bg-[#1C1C1CB0] text-white placeholder:text-gray-400 inter-regular rounded-[10px] border border-solid border-[#434343] outline-none focus:border-[#666] transition-colors"
+                  style={{
+                    fontSize: "clamp(0.75rem, 2vw, 1rem)",
+                    padding: "clamp(12px, 2vw, 15px)",
+                  }}
+                />
+              </div>
+            </div>
+          )}
 
           <div>
             <label className="block mb-2 text-[#D1D1D1] text-sm inter-semi-bold">

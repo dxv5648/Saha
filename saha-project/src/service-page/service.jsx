@@ -74,7 +74,7 @@ function Body() {
       try {
         const { data, error } = await supabase
           .from("Services")
-          .select("*")
+          .select("*, locations(*)")
           .order("created_at", { ascending: false });
 
         if (error) {
@@ -108,6 +108,7 @@ function Body() {
               reviews: service.reviews || 100,
               priceRange: priceRange,
               image_url: service.image_url,
+              location: service.locations,
             };
           });
           setSupabaseServices(transformedServices);
