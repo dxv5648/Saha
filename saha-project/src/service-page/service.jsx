@@ -48,6 +48,15 @@ function Body() {
     }
   }, [aiResults]);
 
+  // Handle category query parameter from service overview
+  useEffect(() => {
+    const categoryParam = searchParams.get("category");
+    if (categoryParam) {
+      setSelectedCategory(decodeURIComponent(categoryParam));
+      setCurrentPage(1);
+    }
+  }, [searchParams]);
+
   // Handle compare query parameter from AI search
   useEffect(() => {
     const compareParam = searchParams.get("compare");
