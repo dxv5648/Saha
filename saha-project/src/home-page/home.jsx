@@ -7,7 +7,7 @@ import AI from "./ai-search.jsx";
 import ServiceOverview from "./service-overview.jsx";
 import Contact from "./contact.jsx";
 import Background from "./background.jsx";
-import ServicePost from "../service-page/service-post.jsx";
+import ServicePost from "../service-page/service-post/index.jsx";
 
 export default function Home() {
   const location = useLocation();
@@ -28,7 +28,6 @@ export default function Home() {
       <Body />
       <ServicePost />
       <Footer className="mt-auto" />
-     
     </div>
   );
 }
