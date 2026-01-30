@@ -96,8 +96,12 @@ async function processQueryWithAI(userQuery, services) {
       name: service.name,
       provider: service.provider,
       category: service.category,
+      location: service.location || service.city || service.suburb || service.address || "",
       description: service.description || "",
       service_list: service.service_list || "",
+      service_price: service.service_price || "",
+      rating: service.rating || 0,
+      reviews: service.reviews || 0,
     }));
 
     // Pick a model that is actually available for THIS API key / tier.
@@ -200,7 +204,13 @@ export async function searchWithAI(userQuery, options = {}) {
     }
 
     // If location info was provided, apply location filtering / ranking
-    const { coords, radiusKm = 50, areaText } = options || {};
+  const { coords, radiusKm = 50, areaText, filters = {} } = options || {};
+  const locationText = filters.locationText || areaText;
+  const minRating = filters.minRating || null;
+  const minReviews = filters.minReviews || null;
+  const priceTier = filters.priceTier || null;
+  const category = filters.category || "";
+  const serviceText = filters.serviceText || "";
 
     function hasCoords(s) {
       return (
@@ -254,11 +264,12 @@ export async function searchWithAI(userQuery, options = {}) {
 
       // Prefer services within radius; if none, allow some outside but rank them lower.
       relevantServices = [...within, ...withoutCoords, ...outside];
-    } else if (areaText && typeof areaText === "string") {
-      const qArea = areaText.toLowerCase();
+    } else if (locationText && typeof locationText === "string") {
+      const qArea = locationText.toLowerCase();
       // Try a simple substring match on common location fields if present
       relevantServices = relevantServices.filter((s) => {
         return (
+          (s.location || "").toLowerCase().includes(qArea) ||
           (s.city || "").toLowerCase().includes(qArea) ||
           (s.suburb || "").toLowerCase().includes(qArea) ||
           (s.postcode || "").toString().includes(qArea) ||
@@ -269,9 +280,37 @@ export async function searchWithAI(userQuery, options = {}) {
       if (relevantServices.length === 0) relevantServices = allServices.slice(0, 10);
     }
 
-    // Rank services by a simple heuristic: rating, reviews and price (lower is better).
-    // This is a light-weight in-backend ranking so that search results present multiple good options.
-    const maxReviews = Math.max(...relevantServices.map((s) => s.reviews || 0), 1);
+    const normalizedCategory = category ? category.toLowerCase() : "";
+    const normalizedServiceText = serviceText ? serviceText.toLowerCase() : "";
+
+    // Apply filter tabs if present
+    if (normalizedCategory) {
+      relevantServices = relevantServices.filter((s) =>
+        (s.category || "").toLowerCase() === normalizedCategory
+      );
+    }
+
+    if (normalizedServiceText) {
+      relevantServices = relevantServices.filter((s) => {
+        return (
+          (s.name || "").toLowerCase().includes(normalizedServiceText) ||
+          (s.description || "").toLowerCase().includes(normalizedServiceText) ||
+          (s.service_list || "").toLowerCase().includes(normalizedServiceText)
+        );
+      });
+    }
+
+    if (minRating) {
+      relevantServices = relevantServices.filter((s) =>
+        (parseFloat(s.rating) || 0) >= minRating
+      );
+    }
+
+    if (minReviews) {
+      relevantServices = relevantServices.filter((s) =>
+        (parseInt(s.reviews) || 0) >= minReviews
+      );
+    }
 
     function avgPrice(service) {
       if (!service.service_price) return null;
@@ -282,6 +321,21 @@ export async function searchWithAI(userQuery, options = {}) {
       if (prices.length === 0) return null;
       return prices.reduce((a, b) => a + b, 0) / prices.length;
     }
+
+    if (priceTier) {
+      relevantServices = relevantServices.filter((s) => {
+        const price = avgPrice(s);
+        if (price === null) return false;
+        if (priceTier === "budget") return price <= 80;
+        if (priceTier === "standard") return price > 80 && price <= 160;
+        if (priceTier === "premium") return price > 160;
+        return true;
+      });
+    }
+
+    // Rank services by a simple heuristic: rating, reviews and price (lower is better).
+    // This is a light-weight in-backend ranking so that search results present multiple good options.
+    const maxReviews = Math.max(...relevantServices.map((s) => s.reviews || 0), 1);
 
     relevantServices = relevantServices
       .map((s) => {
@@ -313,7 +367,7 @@ export async function searchWithAI(userQuery, options = {}) {
         const svc = allServices.find((s) => s.id === idNum);
         return svc ? svc.name : match;
       });
-    } catch (e) {
+    } catch {
       // ignore replacement errors
     }
 
