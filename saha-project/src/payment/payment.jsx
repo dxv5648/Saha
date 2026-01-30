@@ -186,14 +186,15 @@ const appearance = {
   },
 };
 
-// Stripe Elements wrapper: create PaymentIntent first, then render Payment Element
+// Flow: user enters payment page → backend creates PaymentIntent → returns client_secret → frontend loads Elements → user clicks Pay → confirmPayment
 function StripeElementsWrapper({ total, user }) {
   const [clientSecret, setClientSecret] = useState("");
   const [intentLoading, setIntentLoading] = useState(true);
   const [intentError, setIntentError] = useState(null);
 
   useEffect(() => {
-    if (!total || total <= 0) {
+    // Due to the base 10 NZD booking fee, we only create the Payment Intent when total >= 10 (i.e. total > 10 so there is at least some service amount beyond the fee).
+    if (!total || total <= 10) {
       setIntentLoading(false);
       return;
     }
@@ -245,6 +246,17 @@ function StripeElementsWrapper({ total, user }) {
     return (
       <div className="bg-red-500/20 border border-red-500 text-red-200 px-4 py-3 rounded-[10px] text-sm">
         {intentError}
+      </div>
+    );
+  }
+
+  // Due to the base 10 NZD booking fee, require total > 10 to show the payment form (i.e. greater than or equal to 10 in effect).
+  if (total > 0 && total <= 10) {
+    return (
+      <div className="py-6 text-center">
+        <p className="text-[#D1D1D1] text-sm">
+          Minimum payment amount is $10.01 NZD. Please add more items to your cart.
+        </p>
       </div>
     );
   }
@@ -304,7 +316,7 @@ function CheckoutForm({ total, clientSecret }) {
         return;
       }
 
-      // 若 confirmPayment 未重定向（少见）：先清空购物车再跳转；常见为 Stripe 直接重定向，由 payment-success 清空
+      // When confirmPayment resolves without redirect (rare): clear cart and navigate; usually Stripe redirects and payment-success clears the cart.
       try {
         const { data: cartData, error: cartError } = await supabase
           .from("Cart")

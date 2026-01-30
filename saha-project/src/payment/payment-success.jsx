@@ -12,7 +12,7 @@ export default function PaymentSuccess() {
   const location = useLocation();
   const { user } = useAuth();
 
-  // 支付成功后清空购物车：Stripe 成功时会重定向到 return_url，promise 不会 resolve，所以只能在这里清
+  // Clear cart after successful payment. Stripe redirects to return_url on success so the promise never resolves on the payment page; we clear the cart here.
   useEffect(() => {
     const redirectStatus = searchParams.get("redirect_status");
     const clientSecret = searchParams.get("payment_intent_client_secret");
