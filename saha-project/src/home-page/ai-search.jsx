@@ -43,7 +43,8 @@ export default function About() {
     locationText: "",
     minRating: null,
     minReviews: null,
-    priceTier: null,
+    priceMin: null,
+    priceMax: null,
     category: "",
     serviceText: "",
   });
@@ -65,7 +66,8 @@ export default function About() {
     Boolean(filters.locationText) ||
     Boolean(filters.minRating) ||
     Boolean(filters.minReviews) ||
-    Boolean(filters.priceTier) ||
+    Boolean(filters.priceMin) ||
+    Boolean(filters.priceMax) ||
     Boolean(filters.category) ||
     Boolean(filters.serviceText) ||
     Boolean(useMyLocation);
@@ -128,12 +130,21 @@ export default function About() {
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
+  const updateNumberFilter = (key, value) => {
+    const parsed = value === "" ? null : Number(value);
+    setFilters((prev) => ({
+      ...prev,
+      [key]: Number.isNaN(parsed) ? null : Math.max(0, parsed),
+    }));
+  };
+
   const clearFilters = () => {
     setFilters({
       locationText: "",
       minRating: null,
       minReviews: null,
-      priceTier: null,
+      priceMin: null,
+      priceMax: null,
       category: "",
       serviceText: "",
     });
@@ -154,7 +165,7 @@ export default function About() {
         <button
           type="button"
           aria-label="Toggle filters"
-          className="flex items-center justify-center shrink-0 bg-white/10 text-white rounded-full border border-white/20 hover:bg-white/20 transition"
+          className="flex items-center justify-center shrink-0 bg-transparent text-white rounded-full cursor-pointer hover:bg-white hover:text-black transition"
           style={{
             width: "clamp(34px, 5vw, 52px)",
             height: "clamp(34px, 5vw, 52px)",
@@ -162,7 +173,20 @@ export default function About() {
           }}
           onClick={() => setShowFilters((prev) => !prev)}
         >
-          <span className="text-xl">+</span>
+          <svg
+            viewBox="0 0 24 24"
+            width="28"
+            height="28"
+            aria-hidden="true"
+            className="block"
+          >
+            <path
+              d="M12 5v14M5 12h14"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+            />
+          </svg>
         </button>
         <input
           type="text"
@@ -241,23 +265,40 @@ export default function About() {
             )}
 
             {activeTab === "price" && (
-              <div className="flex flex-wrap gap-2">
-                {["budget", "standard", "premium"].map((tier) => (
-                  <button
-                    key={tier}
-                    type="button"
-                    onClick={() => toggleFilterValue("priceTier", tier)}
-                    className={`px-4 py-2 rounded-full text-sm border transition ${
-                      filters.priceTier === tier
-                        ? "bg-white text-black border-white"
-                        : "bg-[#121212] text-white border-white/20 hover:border-white/60"
-                    }`}
-                  >
-                    {tier === "budget" && "Budget"}
-                    {tier === "standard" && "Standard"}
-                    {tier === "premium" && "Premium"}
-                  </button>
-                ))}
+              <div className="flex flex-col gap-4">
+                <label className="text-white text-sm">Price range</label>
+                <div className="flex flex-wrap gap-3">
+                  <input
+                    type="number"
+                    min="0"
+                    max="10000"
+                    placeholder="Min"
+                    value={filters.priceMin ?? ""}
+                    onChange={(e) => updateNumberFilter("priceMin", e.target.value)}
+                    className="w-28 bg-[#121212] text-white placeholder:text-gray-500 rounded-[12px] px-3 py-2 border border-white/10 outline-none focus:border-white/40"
+                  />
+                  <input
+                    type="number"
+                    min="0"
+                    max="10000"
+                    placeholder="Max"
+                    value={filters.priceMax ?? ""}
+                    onChange={(e) => updateNumberFilter("priceMax", e.target.value)}
+                    className="w-28 bg-[#121212] text-white placeholder:text-gray-500 rounded-[12px] px-3 py-2 border border-white/10 outline-none focus:border-white/40"
+                  />
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="10000"
+                  step="50"
+                  value={filters.priceMax ?? 10000}
+                  onChange={(e) => updateNumberFilter("priceMax", e.target.value)}
+                  className="w-full"
+                />
+                <p className="text-xs text-gray-400">
+                  Up to ${filters.priceMax ?? 10000}
+                </p>
               </div>
             )}
 

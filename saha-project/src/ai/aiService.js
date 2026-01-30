@@ -208,7 +208,8 @@ export async function searchWithAI(userQuery, options = {}) {
   const locationText = filters.locationText || areaText;
   const minRating = filters.minRating || null;
   const minReviews = filters.minReviews || null;
-  const priceTier = filters.priceTier || null;
+  const priceMin = Number.isFinite(filters.priceMin) ? filters.priceMin : null;
+  const priceMax = Number.isFinite(filters.priceMax) ? filters.priceMax : null;
   const category = filters.category || "";
   const serviceText = filters.serviceText || "";
 
@@ -322,13 +323,12 @@ export async function searchWithAI(userQuery, options = {}) {
       return prices.reduce((a, b) => a + b, 0) / prices.length;
     }
 
-    if (priceTier) {
+    if (priceMin !== null || priceMax !== null) {
       relevantServices = relevantServices.filter((s) => {
         const price = avgPrice(s);
         if (price === null) return false;
-        if (priceTier === "budget") return price <= 80;
-        if (priceTier === "standard") return price > 80 && price <= 160;
-        if (priceTier === "premium") return price > 160;
+        if (priceMin !== null && price < priceMin) return false;
+        if (priceMax !== null && price > priceMax) return false;
         return true;
       });
     }
