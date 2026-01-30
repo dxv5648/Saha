@@ -26,6 +26,8 @@ export default function ServiceBook({ serviceList, servicePrice, serviceId, serv
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAddingToFavorites, setIsAddingToFavorites] = useState(false);
+  const [isFavorited, setIsFavorited] = useState(false);
   const { user } = useAuth();
 
   // Keep selection in sync when services change
@@ -37,6 +39,38 @@ export default function ServiceBook({ serviceList, servicePrice, serviceId, serv
       setSelectedIndexes(parsedServices.map((_, idx) => idx));
     }
   }, [parsedServices]);
+
+  // Check if service is already favorited
+  useEffect(() => {
+    const checkFavoriteStatus = async () => {
+      if (!user || !serviceId) {
+        setIsFavorited(false);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from("Favorite")
+          .select("id")
+          .eq("service_id", serviceId)
+          .eq("user_id", user.id)
+          .single();
+
+        if (error && error.code !== "PGRST116") {
+          // PGRST116 is "not found" error, which is fine
+          console.error("Error checking favorite status:", error);
+          setIsFavorited(false);
+        } else {
+          setIsFavorited(!!data);
+        }
+      } catch (error) {
+        console.error("Unexpected error checking favorite status:", error);
+        setIsFavorited(false);
+      }
+    };
+
+    checkFavoriteStatus();
+  }, [user, serviceId]);
 
   const toggleService = (idx) => {
     setSelectedIndexes((prev) =>
@@ -159,6 +193,63 @@ export default function ServiceBook({ serviceList, servicePrice, serviceId, serv
     }
   };
 
+  const handleAddToFavorites = async () => {
+    // Validation
+    if (!user) {
+      alert("Please login to add services to favorites");
+      return;
+    }
+
+    if (!serviceId) {
+      alert("Service ID is missing. Please refresh the page and try again.");
+      return;
+    }
+
+    setIsAddingToFavorites(true);
+
+    try {
+      if (isFavorited) {
+        // Remove from favorites
+        const { error: deleteError } = await supabase
+          .from("Favorite")
+          .delete()
+          .eq("service_id", serviceId)
+          .eq("user_id", user.id);
+
+        if (deleteError) {
+          console.error("Error removing from favorites:", deleteError);
+          alert("Error removing from favorites: " + deleteError.message);
+        } else {
+          setIsFavorited(false);
+          alert("Service removed from favorites");
+        }
+      } else {
+        // Add to favorites
+        const { error: insertError } = await supabase
+          .from("Favorite")
+          .insert([
+            {
+              service_id: serviceId,
+              user_id: user.id,
+            },
+          ]);
+
+        if (insertError) {
+          console.error("Error adding to favorites:", insertError);
+          alert("Error adding to favorites: " + insertError.message);
+        } else {
+          setIsFavorited(true);
+          alert("Service added to favorites successfully!");
+        }
+      }
+    } catch (error) {
+      console.error("Unexpected error:", error);
+      alert("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsAddingToFavorites(false);
+    }
+  };
+
   return (
     <div className="flex flex-col items-start w-full bg-[#161616F0] py-6 px-6 rounded-[40px] inter-regular">
       <span className="text-white text-lg mb-6 inter-semi-bold">
@@ -241,10 +332,21 @@ export default function ServiceBook({ serviceList, servicePrice, serviceId, serv
         {isSubmitting ? "Adding..." : "Book"}
       </button>
       <button
-        className="w-full bg-[#1C1C1CB0] text-[#D1D1D1] text-sm py-3 mb-4 rounded-[10px] border border-solid border-[#434343]"
-        onClick={() => alert("Pressed!")}
+        className={`w-full text-sm py-3 mb-4 rounded-[10px] border border-solid transition disabled:opacity-50 disabled:cursor-not-allowed ${
+          isFavorited
+            ? "bg-white text-black border-white hover:bg-gray-100"
+            : "bg-[#1C1C1CB0] text-[#D1D1D1] border-[#434343] hover:bg-[#2C2C2C]"
+        }`}
+        onClick={handleAddToFavorites}
+        disabled={isAddingToFavorites}
       >
-        {"Add to Favorites"}
+        {isAddingToFavorites
+          ? isFavorited
+            ? "Removing..."
+            : "Adding..."
+          : isFavorited
+            ? "Remove from Favorites"
+            : "Add to Favorites"}
       </button>
       <div className="w-full bg-[#353535] h-px mb-4"></div>
       <div className="flex justify-between w-full text-[#D1D1D1] text-sm">

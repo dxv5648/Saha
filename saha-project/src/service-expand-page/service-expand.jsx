@@ -43,16 +43,20 @@ function Body() {
             // Calculate priceRange from service_price if available
             let priceRange = "$50-100/hr"; // default
             if (service.service_price) {
-              const prices = service.service_price.split(",").map((p) => parseFloat(p.trim())).filter((p) => !isNaN(p));
+              const prices = service.service_price
+                .split(",")
+                .map((p) => parseFloat(p.trim()))
+                .filter((p) => !isNaN(p));
               if (prices.length > 0) {
                 const minPrice = Math.round(Math.min(...prices));
                 const maxPrice = Math.round(Math.max(...prices));
-                priceRange = minPrice === maxPrice 
-                  ? `$${minPrice}/hr` 
-                  : `$${minPrice}-${maxPrice}/hr`;
+                priceRange =
+                  minPrice === maxPrice
+                    ? `$${minPrice}/hr`
+                    : `$${minPrice}-${maxPrice}/hr`;
               }
             }
-            
+
             return {
               id: service.id,
               name: service.name,
@@ -64,6 +68,7 @@ function Body() {
               description: service.description,
               service_list: service.service_list,
               service_price: service.service_price,
+              image_url: service.image_url,
             };
           });
           setSupabaseServices(transformedServices);
@@ -86,7 +91,8 @@ function Body() {
     // Try exact match first
     if (String(s.id) === String(serviceId)) return true;
     // Try parsing as integer if both are numeric
-    if (!isNaN(serviceId) && !isNaN(s.id) && s.id === parseInt(serviceId)) return true;
+    if (!isNaN(serviceId) && !isNaN(s.id) && s.id === parseInt(serviceId))
+      return true;
     return false;
   });
 
@@ -122,11 +128,11 @@ function Body() {
         </div>
         <div className="flex justify-center px-4">
           <div className="w-full max-w-300 flex flex-col">
-            <AboutService 
+            <AboutService
               serviceName={currentService.name}
               description={currentService.description}
             />
-            <ServiceType 
+            <ServiceType
               serviceList={currentService.service_list}
               servicePrice={currentService.service_price}
             />
