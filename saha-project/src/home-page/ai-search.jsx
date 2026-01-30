@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { useState } from "react";
 import { searchWithAI } from "../ai/aiService";
 import AISearchResults from "../ai/AISearchResults";
 import { useNavigate } from "react-router-dom";
