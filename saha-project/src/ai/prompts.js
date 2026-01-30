@@ -9,6 +9,7 @@ You have access to a database of services with the following structure:
 - name: service name
 - provider: service provider/company name
 - category: service category (e.g., Electrical, Plumbing, Painting, HVAC, etc.)
+- location: service location (city, suburb, address, or region)
 - description: detailed description of the service
 - service_list: comma-separated list of specific services offered
 - service_price: comma-separated list of prices corresponding to service_list
