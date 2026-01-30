@@ -1,6 +1,18 @@
 import { Link } from "react-router-dom";
 
 export default function ServiceOverview() {
+  const services = [
+    "Electrical",
+    "Plumbing",
+    "HVAC",
+    "Cleaning",
+    "Landscaping",
+    "Roofing",
+    "Painting",
+    "Carpentry",
+    "Appliances",
+  ];
+
   return (
     <div className="flex flex-col items-center mb-33 w-full px-[10vw]">
       <span
@@ -16,97 +28,24 @@ export default function ServiceOverview() {
           marginBottom: "clamp(30px, 4vw, 50px)",
         }}
       >
-        <Link
-          to="/Service-Expand"
-          className="flex flex-col items-center bg-[#0F0F0FB5] text-left rounded-[20px] border-0 cursor-pointer hover:bg-[#1a1a1a] transition-colors"
-          style={{
-            padding: "clamp(40px, 6vw, 68px) clamp(30px, 5vw, 65px)",
-            gap: "clamp(12px, 2vw, 18px)",
-          }}
-        >
-          <span
-            className="text-white whitespace-nowrap inter-regular text-center"
-            style={{ fontSize: "clamp(0.875rem, 2.5vw, 1.875rem)" }}
+        {services.map((service) => (
+          <Link
+            key={service}
+            to={`/Service?service=${encodeURIComponent(service)}&category=${encodeURIComponent(service)}`}
+            className="group flex flex-col items-center justify-center bg-gradient-to-br from-[#1a1a1a] to-[#0F0F0F] text-center rounded-[20px] border border-[#333333] cursor-pointer hover:from-[#2a2a2a] hover:to-[#1a1a1a] hover:border-[#555555] transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
+            style={{
+              padding: "clamp(40px, 6vw, 68px) clamp(30px, 5vw, 65px)",
+              minHeight: "clamp(150px, 20vw, 220px)",
+            }}
           >
-            {"Home Services"}
-          </span>
-        </Link>
-        <Link
-          //href="/services/professional"
-          className="flex flex-col items-center bg-[#0F0F0FB5] text-left rounded-[20px] border-0 cursor-pointer hover:bg-[#1a1a1a] transition-colors"
-          style={{
-            padding: "clamp(40px, 6vw, 68px) clamp(15px, 2vw, 21px)",
-            gap: "clamp(14px, 2vw, 21px)",
-          }}
-        >
-          <span
-            className="text-white whitespace-nowrap inter-regular text-center"
-            style={{ fontSize: "clamp(0.875rem, 2.5vw, 1.875rem)" }}
-          >
-            {"Professional Services"}
-          </span>
-        </Link>
-        <Link
-          //href="/services/creative"
-          className="flex flex-col items-center bg-[#0F0F0FB5] text-left rounded-[20px] border-0 cursor-pointer hover:bg-[#1a1a1a] transition-colors"
-          style={{
-            padding: "clamp(40px, 6vw, 68px) clamp(30px, 4vw, 49px)",
-            gap: "clamp(12px, 2vw, 18px)",
-          }}
-        >
-          <span
-            className="text-white whitespace-nowrap inter-regular text-center"
-            style={{ fontSize: "clamp(1.25rem, 3vw, 1.875rem)" }}
-          >
-            {"Creative Services"}
-          </span>
-        </Link>
-
-        <Link
-          //href="/services/home"
-          className="flex flex-col items-center bg-[#0F0F0FB5] text-left rounded-[20px] border-0 cursor-pointer hover:bg-[#1a1a1a] transition-colors"
-          style={{
-            padding: "clamp(40px, 6vw, 68px) clamp(30px, 5vw, 65px)",
-            gap: "clamp(12px, 2vw, 18px)",
-          }}
-        >
-          <span
-            className="text-white whitespace-nowrap inter-regular text-center"
-            style={{ fontSize: "clamp(1.25rem, 3vw, 1.875rem)" }}
-          >
-            {"Home Services"}
-          </span>
-        </Link>
-        <Link
-          //href="/services/professional"
-          className="flex flex-col items-center bg-[#0F0F0FB5] text-left rounded-[20px] border-0 cursor-pointer hover:bg-[#1a1a1a] transition-colors"
-          style={{
-            padding: "clamp(40px, 6vw, 68px) clamp(15px, 2vw, 21px)",
-            gap: "clamp(14px, 2vw, 21px)",
-          }}
-        >
-          <span
-            className="text-white whitespace-nowrap inter-regular text-center"
-            style={{ fontSize: "clamp(1.25rem, 3vw, 1.875rem)" }}
-          >
-            {"Professional Services"}
-          </span>
-        </Link>
-        <Link
-          //href="/services/creative"
-          className="flex flex-col items-center bg-[#0F0F0FB5] text-left rounded-[20px] border-0 cursor-pointer hover:bg-[#1a1a1a] transition-colors"
-          style={{
-            padding: "clamp(40px, 6vw, 68px) clamp(30px, 4vw, 49px)",
-            gap: "clamp(12px, 2vw, 18px)",
-          }}
-        >
-          <span
-            className="text-white whitespace-nowrap inter-regular text-center"
-            style={{ fontSize: "clamp(0.875rem, 2.5vw, 1.875rem)" }}
-          >
-            {"Creative Services"}
-          </span>
-        </Link>
+            <span
+              className="text-white inter-semi-bold text-center group-hover:text-blue-400 transition-colors duration-300"
+              style={{ fontSize: "clamp(1rem, 2.5vw, 1.5rem)" }}
+            >
+              {service}
+            </span>
+          </Link>
+        ))}
       </div>
 
       <Link to="/Service">

@@ -9,6 +9,7 @@ export default function ServiceExpandHeader({ service = {} }) {
     provider = "",
     priceRange = "",
     category = "",
+    image_url = null,
   } = service;
 
   const [rating, setRating] = useState(0);
@@ -31,7 +32,10 @@ export default function ServiceExpandHeader({ service = {} }) {
           setReviews(0);
         } else if (data && data.length > 0) {
           // Calculate average rating
-          const totalStars = data.reduce((sum, review) => sum + review.Stars, 0);
+          const totalStars = data.reduce(
+            (sum, review) => sum + review.Stars,
+            0,
+          );
           const averageRating = totalStars / data.length;
           // Round to 1 decimal place
           setRating(parseFloat(averageRating.toFixed(1)));
@@ -53,40 +57,38 @@ export default function ServiceExpandHeader({ service = {} }) {
   return (
     <div className="relative w-full max-w-300 mb-6 rounded-lg overflow-hidden">
       <img
-        src={WorkImage}
+        src={image_url || WorkImage}
         className="w-full h-44.75 object-cover"
         alt={name || "Service"}
       />
       {/* Overlay gradient for better text readability */}
-      <div 
+      <div
         className="absolute inset-0"
         style={{
-          background: "linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 50%, transparent 100%)"
+          background:
+            "linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 50%, transparent 100%)",
         }}
       ></div>
-      
+
       {/* Category badge */}
       {category && (
         <div className="absolute top-4 right-4 bg-black/70 px-4 py-2 rounded-lg z-10">
           <span className="text-white font-bold text-sm">{category}</span>
         </div>
       )}
-      
+
       {/* Content overlaid on image */}
       <div className="absolute bottom-0 left-0 right-0 p-6 z-10">
-        
         {/* Service Name */}
         <h1 className="text-white text-3xl font-bold mb-2 inter-semi-bold">
           {name || "Service"}
         </h1>
-        
+
         {/* Provider */}
         {provider && (
-          <p className="text-[#D1D1D1] text-base mb-4">
-            By {provider}
-          </p>
+          <p className="text-[#D1D1D1] text-base mb-4">By {provider}</p>
         )}
-        
+
         {/* Rating and Price */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -94,9 +96,7 @@ export default function ServiceExpandHeader({ service = {} }) {
             <span className="text-white font-semibold text-lg">
               {rating > 0 ? rating : "N/A"}
             </span>
-            <span className="text-[#BABABA] text-base">
-              ({reviews})
-            </span>
+            <span className="text-[#BABABA] text-base">({reviews})</span>
           </div>
           {priceRange && (
             <span className="text-white font-semibold text-lg">

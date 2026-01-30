@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useState } from "react";
 import { searchWithAI } from "../ai/aiService";
 import AISearchResults from "../ai/AISearchResults";
 import { useNavigate } from "react-router-dom";
@@ -54,9 +55,10 @@ export default function About() {
     new Promise((resolve) => {
       if (!navigator.geolocation) return resolve(null);
       navigator.geolocation.getCurrentPosition(
-        (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        (pos) =>
+          resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
         () => resolve(null),
-        { enableHighAccuracy: false, timeout: 5000 }
+        { enableHighAccuracy: false, timeout: 5000 },
       );
     });
 
@@ -94,7 +96,7 @@ export default function About() {
       console.error("Error searching with AI:", err);
       setError(
         err.message ||
-          "Failed to search. Please check your API key and try again."
+          "Failed to search. Please check your API key and try again.",
       );
     } finally {
       setIsLoading(false);
@@ -141,13 +143,13 @@ export default function About() {
   return (
     <div className="flex flex-col items-center mt-52.75 mb-65.25 w-full px-[10vw]">
       <span
-        className="text-white poppins-bold mt-6.5 mb-9.5 text-center w-full max-w-200 whitespace-nowrap"
+        className="text-gray-300 poppins-bold mt-6.5 mb-9.5 text-center w-full max-w-200 whitespace-nowrap"
         style={{ fontSize: "clamp(1.5rem, 5vw, 3.75rem)" }}
       >
         {"What service do you require?"}
       </span>
       <div
-        className="flex items-center bg-[#0F0F0FB5] mb-9.75 rounded-[50px] w-full max-w-200"
+        className="flex items-center bg-[#0a0a0a] mb-9.75 rounded-[50px] w-full max-w-200 border border-[#2a2a2a] shadow-lg hover:shadow-xl transition-all duration-300"
         style={{ padding: "clamp(8px, 1.5vw, 13px)" }}
       >
         <button
@@ -166,17 +168,17 @@ export default function About() {
         <input
           type="text"
           placeholder="Describe your requirements..."
-          className="bg-transparent inter-regular text-[#BABABA] grow outline-none placeholder-[#BABABA]"
+          className="bg-transparent inter-regular text-gray-400 grow outline-none placeholder-gray-600 focus:text-gray-200 transition-colors"
           style={{
             fontSize: "clamp(0.875rem, 2vw, 1.25rem)",
-            marginLeft: "clamp(8px, 1vw, 12px)",
+            marginLeft: "clamp(15px, 2vw, 25px)",
           }}
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyPress={handleKeyPress}
         />
         <button
-          className="bg-transparent text-white font-bold rounded-[30px] shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="bg-white text-black font-bold rounded-[30px] shrink-0 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-200 transition-all duration-200 hover:shadow-lg"
           style={{
             fontSize: "clamp(0.875rem, 2vw, 1.25rem)",
             padding: "clamp(6px, 1vw, 10px) clamp(15px, 2vw, 25px)",
@@ -333,9 +335,7 @@ export default function About() {
         </div>
       )}
       {error && (
-        <div className="mt-4 text-red-400 text-center text-sm">
-          {error}
-        </div>
+        <div className="mt-4 text-red-400 text-center text-sm">{error}</div>
       )}
       {results && (
         <AISearchResults results={results} onClose={handleCloseResults} />

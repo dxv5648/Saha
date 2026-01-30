@@ -6,6 +6,7 @@ import Header from "../home-page/header.jsx";
 import Filter from "./filter.jsx";
 import ServiceIcon from "./service-icon.jsx";
 import Background from "../home-page/background.jsx";
+import CompareModal from "./compare-modal.jsx";
 import supabase from "../supabase-client";
 
 const SERVICES_PER_PAGE = 9;
@@ -28,6 +29,9 @@ function Body() {
   const [sortBy, setSortBy] = useState("Featured");
   const [supabaseServices, setSupabaseServices] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isCompareMode, setIsCompareMode] = useState(false);
+  const [selectedServices, setSelectedServices] = useState([]);
+  const [showCompareModal, setShowCompareModal] = useState(false);
   const [compareServiceIds, setCompareServiceIds] = useState([]);
   const location = useLocation();
   const navigate = useNavigate();
@@ -43,6 +47,15 @@ function Body() {
       setCurrentPage(1);
     }
   }, [aiResults]);
+
+  // Handle category query parameter from service overview
+  useEffect(() => {
+    const categoryParam = searchParams.get("category");
+    if (categoryParam) {
+      setSelectedCategory(decodeURIComponent(categoryParam));
+      setCurrentPage(1);
+    }
+  }, [searchParams]);
 
   // Handle compare query parameter from AI search
   useEffect(() => {
@@ -61,7 +74,7 @@ function Body() {
       try {
         const { data, error } = await supabase
           .from("Services")
-          .select("*")
+          .select("*, locations(*)")
           .order("created_at", { ascending: false });
 
         if (error) {
@@ -72,16 +85,20 @@ function Body() {
             // Calculate priceRange from service_price if available
             let priceRange = "$50-100/hr"; // default
             if (service.service_price) {
-              const prices = service.service_price.split(",").map((p) => parseFloat(p.trim())).filter((p) => !isNaN(p));
+              const prices = service.service_price
+                .split(",")
+                .map((p) => parseFloat(p.trim()))
+                .filter((p) => !isNaN(p));
               if (prices.length > 0) {
                 const minPrice = Math.round(Math.min(...prices));
                 const maxPrice = Math.round(Math.max(...prices));
-                priceRange = minPrice === maxPrice 
-                  ? `$${minPrice}/hr` 
-                  : `$${minPrice}-${maxPrice}/hr`;
+                priceRange =
+                  minPrice === maxPrice
+                    ? `$${minPrice}/hr`
+                    : `$${minPrice}-${maxPrice}/hr`;
               }
             }
-            
+
             return {
               id: service.id || `supabase-${index}`,
               name: service.name,
@@ -90,6 +107,8 @@ function Body() {
               rating: service.rating || 4.5,
               reviews: service.reviews || 100,
               priceRange: priceRange,
+              image_url: service.image_url,
+              location: service.locations,
             };
           });
           setSupabaseServices(transformedServices);
@@ -122,7 +141,7 @@ function Body() {
           return false;
         }
       }
-      
+
       const matchesSearch =
         service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         service.provider.toLowerCase().includes(searchQuery.toLowerCase());
@@ -152,7 +171,7 @@ function Body() {
   const startIndex = (currentPage - 1) * SERVICES_PER_PAGE;
   const paginatedServices = filteredServices.slice(
     startIndex,
-    startIndex + SERVICES_PER_PAGE
+    startIndex + SERVICES_PER_PAGE,
   );
 
   const handleSearchChange = (query) => {
@@ -170,6 +189,43 @@ function Body() {
     setCurrentPage(1);
   };
 
+  const handleCompareClick = () => {
+    setIsCompareMode(!isCompareMode);
+    if (isCompareMode) {
+      // 退出比较模式时清空选择
+      setSelectedServices([]);
+    }
+  };
+
+  const handleServiceToggle = (service) => {
+    setSelectedServices((prev) => {
+      const isSelected = prev.some((s) => s.id === service.id);
+      if (isSelected) {
+        return prev.filter((s) => s.id !== service.id);
+      } else {
+        if (prev.length >= 3) {
+          alert("You can only select 3 services to compare");
+          return prev;
+        }
+        return [...prev, service];
+      }
+    });
+  };
+
+  const handleConfirmCompare = () => {
+    if (selectedServices.length === 0) {
+      alert("Please select at least one service to compare");
+      return;
+    }
+    setShowCompareModal(true);
+  };
+
+  const handleCloseCompareModal = () => {
+    setShowCompareModal(false);
+    setIsCompareMode(false);
+    setSelectedServices([]);
+  };
+
   return (
     <div className="w-full relative">
       <Background />
@@ -182,6 +238,10 @@ function Body() {
           onCategoryChange={handleCategoryChange}
           sortBy={sortBy}
           onSortChange={handleSortChange}
+          isCompareMode={isCompareMode}
+          onCompareClick={handleCompareClick}
+          selectedCount={selectedServices.length}
+          onConfirmCompare={handleConfirmCompare}
         />
         <h1 className="text-white text-center text-4xl poppins-bold px-[2vw] mb-10">
           Services in your area
@@ -209,7 +269,13 @@ function Body() {
             </div>
           )}
           {paginatedServices.map((service) => (
-            <ServiceIcon key={service.id} service={service} />
+            <ServiceIcon
+              key={service.id}
+              service={service}
+              isCompareMode={isCompareMode}
+              isSelected={selectedServices.some((s) => s.id === service.id)}
+              onToggleSelect={() => handleServiceToggle(service)}
+            />
           ))}
         </div>
 
@@ -255,6 +321,12 @@ function Body() {
           </div>
         )}
       </div>
+      {showCompareModal && (
+        <CompareModal
+          services={selectedServices}
+          onClose={handleCloseCompareModal}
+        />
+      )}
     </div>
   );
 }
