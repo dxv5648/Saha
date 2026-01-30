@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import supabase from "../supabase-client";
 
@@ -7,6 +8,7 @@ export default function OrderSummary() {
   const [serviceCount, setServiceCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const BOOKING_FEE = 10;
 
@@ -124,7 +126,7 @@ export default function OrderSummary() {
 
           <button
             className="w-full bg-white text-black text-base py-4 rounded-[10px] hover:bg-gray-100 transition mb-3 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-            onClick={() => alert("Proceed to payment")}
+            onClick={() => navigate("/payment")}
             disabled={serviceCount === 0}
           >
             Proceed to Payment
