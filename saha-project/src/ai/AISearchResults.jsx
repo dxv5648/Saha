@@ -117,6 +117,11 @@ function ServiceCard({ service, onClick }) {
     }
   }
 
+  const parsedRating = Number.parseFloat(service.rating);
+  const parsedReviews = Number.parseInt(service.reviews, 10);
+  const ratingValue = Number.isFinite(parsedRating) ? parsedRating : null;
+  const reviewsValue = Number.isFinite(parsedReviews) ? parsedReviews : null;
+
   return (
     <div
       onClick={onClick}
@@ -140,7 +145,7 @@ function ServiceCard({ service, onClick }) {
           )}
           <div className="flex items-center gap-4 mt-2">
             <span className="text-[#BABABA] text-sm">
-              ⭐ {service.rating || 4.5} ({service.reviews || 100} reviews)
+              ⭐ {ratingValue ?? "N/A"} ({reviewsValue ?? "N/A"} reviews)
             </span>
             <span className="text-[#014A86] text-sm font-semibold">
               {priceRange}
