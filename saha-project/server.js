@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import Stripe from "stripe";
 import dotenv from "dotenv";
+import nodemailer from "nodemailer";
 
 // Load environment variables
 dotenv.config();
@@ -24,6 +25,18 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM } = process.env;
+
+const mailTransporter = SMTP_HOST
+  ? nodemailer.createTransport({
+      host: SMTP_HOST,
+      port: Number(SMTP_PORT) || 587,
+      secure: Number(SMTP_PORT) === 465,
+      auth:
+        SMTP_USER && SMTP_PASS ? { user: SMTP_USER, pass: SMTP_PASS } : null,
+    })
+  : null;
 
 // Health check endpoint
 app.get("/health", (req, res) => {
@@ -53,12 +66,13 @@ app.post("/api/create-payment-intent", async (req, res) => {
 
     if (isNaN(amountInCents) || amountInCents <= 0) {
       return res.status(400).json({
-        error: "Invalid amount format. Amount must be a positive number in cents.",
+        error:
+          "Invalid amount format. Amount must be a positive number in cents.",
       });
     }
 
     console.log(
-      `Creating payment intent: ${amountInCents} ${currency.toUpperCase()} for user ${userId}`
+      `Creating payment intent: ${amountInCents} ${currency.toUpperCase()} for user ${userId}`,
     );
 
     // Create Payment Intent
@@ -75,7 +89,7 @@ app.post("/api/create-payment-intent", async (req, res) => {
     });
 
     console.log(
-      `Payment intent created: ${paymentIntent.id} (${paymentIntent.status})`
+      `Payment intent created: ${paymentIntent.id} (${paymentIntent.status})`,
     );
 
     // Return client secret to frontend
@@ -100,43 +114,83 @@ app.post("/api/create-payment-intent", async (req, res) => {
   }
 });
 
-// Webhook endpoint for Stripe events (optional, for handling payment confirmations)
-app.post("/api/webhook", express.raw({ type: "application/json" }), async (req, res) => {
-  const sig = req.headers["stripe-signature"];
-
-  let event;
-
+// Contact form email endpoint
+app.post("/api/contact", async (req, res) => {
   try {
-    event = stripe.webhooks.constructEvent(
-      req.body,
-      sig,
-      process.env.STRIPE_WEBHOOK_SECRET
-    );
-  } catch (err) {
-    console.error("Webhook signature verification failed:", err.message);
-    return res.status(400).send(`Webhook Error: ${err.message}`);
-  }
+    const { subject, email, message } = req.body || {};
 
-  // Handle the event
-  switch (event.type) {
-    case "payment_intent.succeeded":
-      const paymentIntent = event.data.object;
-      console.log("Payment succeeded:", paymentIntent.id);
-      // Update your database here
-      break;
-    case "payment_intent.payment_failed":
-      const failedPayment = event.data.object;
-      console.log("Payment failed:", failedPayment.id);
-      // Handle failed payment
-      break;
-    default:
-      console.log(`Unhandled event type ${event.type}`);
-  }
+    if (!subject || !email || !message) {
+      return res.status(400).json({ error: "Missing required fields." });
+    }
 
-  res.json({ received: true });
+    if (!mailTransporter) {
+      return res.status(500).json({
+        error: "Email service is not configured. Set SMTP_* env variables.",
+      });
+    }
+
+    const fromAddress = SMTP_FROM || SMTP_USER;
+
+    await mailTransporter.sendMail({
+      from: fromAddress,
+      to: "waihekepro@gmail.com",
+      replyTo: email,
+      subject: subject,
+      text: `Email: ${email}\n\nMessage:\n${message}`,
+    });
+
+    return res.json({ success: true });
+  } catch (error) {
+    console.error("Error sending contact email:", error);
+    return res.status(500).json({
+      error: "Failed to send email. Please try again later.",
+    });
+  }
 });
+
+// Webhook endpoint for Stripe events (optional, for handling payment confirmations)
+app.post(
+  "/api/webhook",
+  express.raw({ type: "application/json" }),
+  async (req, res) => {
+    const sig = req.headers["stripe-signature"];
+
+    let event;
+
+    try {
+      event = stripe.webhooks.constructEvent(
+        req.body,
+        sig,
+        process.env.STRIPE_WEBHOOK_SECRET,
+      );
+    } catch (err) {
+      console.error("Webhook signature verification failed:", err.message);
+      return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+
+    // Handle the event
+    switch (event.type) {
+      case "payment_intent.succeeded":
+        const paymentIntent = event.data.object;
+        console.log("Payment succeeded:", paymentIntent.id);
+        // Update your database here
+        break;
+      case "payment_intent.payment_failed":
+        const failedPayment = event.data.object;
+        console.log("Payment failed:", failedPayment.id);
+        // Handle failed payment
+        break;
+      default:
+        console.log(`Unhandled event type ${event.type}`);
+    }
+
+    res.json({ received: true });
+  },
+);
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
-  console.log(`Payment Intent endpoint: http://localhost:${PORT}/api/create-payment-intent`);
+  console.log(
+    `Payment Intent endpoint: http://localhost:${PORT}/api/create-payment-intent`,
+  );
 });
