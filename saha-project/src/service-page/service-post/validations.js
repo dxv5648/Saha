@@ -9,7 +9,7 @@ export const validateForm = (
   city,
   region,
   image,
-  services
+  services,
 ) => {
   if (!name.trim()) {
     return "Please enter a service name";
@@ -34,9 +34,6 @@ export const validateForm = (
   }
   if (!city.trim()) {
     return "Please enter a city";
-  }
-  if (!region.trim()) {
-    return "Please enter a region";
   }
   if (!image) {
     return "Please select an image for the service";

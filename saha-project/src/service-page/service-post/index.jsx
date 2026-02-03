@@ -252,7 +252,7 @@ export default function ServicePost() {
               </div>
               <div>
                 <label className="block mb-2 text-[#D1D1D1] text-sm inter-semi-bold">
-                  Region *
+                  Region
                 </label>
                 <input
                   type="text"
