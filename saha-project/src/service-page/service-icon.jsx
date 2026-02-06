@@ -82,12 +82,14 @@ export default function ServiceIcon({
         <div className="relative w-full overflow-hidden">
           <img
             src={image_url || WorkImage}
-            className="w-full object-cover rounded-t-[30px] transition-transform duration-500 hover:scale-110"
+            className="w-full object-cover rounded-t-[30px]"
             style={{
               height: "clamp(250px, 35vw, 393px)",
               marginBottom: "clamp(6px, 1vw, 9px)",
             }}
             alt={name}
+            loading="lazy"
+            onError={(e) => { e.target.onerror = null; e.target.src = WorkImage; }}
           />
           {isCompareMode && (
             <div

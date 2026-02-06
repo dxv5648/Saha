@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import WorkImage from "../assets/Work-imgae.png";
 
 export default function CompareModal({ services = [], onClose = () => {} }) {
   const navigate = useNavigate();
@@ -111,13 +112,14 @@ export default function CompareModal({ services = [], onClose = () => {} }) {
                     <div className="flex justify-center mb-4">
                       <div className="relative">
                         <img
-                          src={service.image_url}
+                          src={service.image_url || WorkImage}
                           alt={service.provider}
                           className="object-cover rounded-full"
                           style={{
                             width: "clamp(100px, 12vw, 140px)",
                             height: "clamp(100px, 12vw, 140px)",
                           }}
+                          onError={(e) => { e.target.onerror = null; e.target.src = WorkImage; }}
                         />
                       </div>
                     </div>

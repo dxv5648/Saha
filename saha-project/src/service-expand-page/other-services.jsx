@@ -74,6 +74,7 @@ export default function OtherServices({ currentServiceId, currentCategory }) {
                 priceRange: priceRange,
                 rating: rating,
                 reviews: reviewsCount,
+                image_url: service.image_url || null,
               };
             })
           );
@@ -136,9 +137,10 @@ export default function OtherServices({ currentServiceId, currentCategory }) {
             style={{ width: "163px", flexShrink: 0 }}
           >
             <img
-              src={WorkImage}
+              src={service.image_url || WorkImage}
               className="w-40.75 h-36.75 mb-0.75 object-fill rounded-t-[30px]"
               alt={service.name}
+              onError={(e) => { e.target.onerror = null; e.target.src = WorkImage; }}
             />
             <span className="text-white text-sm mb-px ml-2">
               {service.name}

@@ -150,6 +150,7 @@ export default function RecentServices() {
                   src={booking.image}
                   alt={booking.title}
                   className="w-16 h-16 object-cover rounded-[10px] flex-shrink-0"
+                  onError={(e) => { e.target.onerror = null; e.target.src = WorkImage; }}
                 />
                 <div className="flex flex-col items-start grow inter-regular">
                   <span

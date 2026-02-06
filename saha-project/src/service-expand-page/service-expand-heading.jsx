@@ -60,6 +60,8 @@ export default function ServiceExpandHeader({ service = {} }) {
         src={image_url || WorkImage}
         className="w-full h-44.75 object-cover"
         alt={name || "Service"}
+        loading="lazy"
+        onError={(e) => { e.target.onerror = null; e.target.src = WorkImage; }}
       />
       {/* Overlay gradient for better text readability */}
       <div

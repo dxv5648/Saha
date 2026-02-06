@@ -129,7 +129,13 @@ export default function ServicePost() {
       }
     } catch (err) {
       console.error("Error adding service:", err);
-      alert(err.message || "Error adding service. Please try again.");
+      const msg = err?.message || "Error adding service. Please try again.";
+      // Show a friendlier message for generic network errors
+      if (msg.toLowerCase().includes("failed to fetch")) {
+        alert("Network error while posting service. Please check your connection and try again.");
+      } else {
+        alert(msg);
+      }
     } finally {
       setIsUploading(false);
     }
