@@ -12,41 +12,80 @@ export default function PaymentSuccess() {
   const location = useLocation();
   const { user } = useAuth();
 
-  // Clear cart after successful payment. Stripe redirects to return_url on success so the promise never resolves on the payment page; we clear the cart here.
+  // Clear cart and update order status after successful payment
   useEffect(() => {
     const redirectStatus = searchParams.get("redirect_status");
-    const clientSecret = searchParams.get("payment_intent_client_secret");
+    const paymentIntent = searchParams.get("payment_intent");
     const fromPayment = location.state?.fromPayment === true;
-    const shouldClear =
-      (redirectStatus === "succeeded" && clientSecret) || fromPayment;
+    const shouldProcess =
+      (redirectStatus === "succeeded" && paymentIntent) || fromPayment;
 
-    if (!shouldClear || !user?.id) return;
+    if (!shouldProcess || !user?.id) return;
 
-    const clearCart = async () => {
+    const processSuccess = async () => {
       try {
-        const { data, error } = await supabase
+        // Update order status to 'paid'
+        if (paymentIntent) {
+          try {
+            const res = await fetch("/api/update-order-status", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                paymentIntentId: paymentIntent,
+                status: "paid",
+              }),
+            });
+            if (res.ok) {
+              console.log("Order status updated to paid");
+            } else {
+              console.error("Failed to update order status");
+            }
+          } catch (e) {
+            console.error("Error updating order status:", e);
+          }
+        }
+
+        // Clear cart and cart_items
+        const { data: cartData, error: cartError } = await supabase
           .from("Cart")
           .select("id")
-          .eq("user_id", user.id);
-        if (error) {
-          console.error("Error fetching cart for clear:", error);
+          .eq("user_id", user.id)
+          .single();
+
+        if (cartError && cartError.code !== "PGRST116") {
+          console.error("Error fetching cart for clear:", cartError);
           return;
         }
-        if (!data || data.length === 0) return;
-        const ids = data.map((c) => c.id);
-        const { error: delError } = await supabase
+
+        if (!cartData) return;
+
+        // Delete all Cart_Items for this cart
+        const { error: delCartItemError } = await supabase
+          .from("Cart_Item")
+          .delete()
+          .eq("cart_id", cartData.id);
+
+        if (delCartItemError) {
+          console.error("Error clearing cart items after payment:", delCartItemError);
+        }
+
+        // Delete the Cart entry
+        const { error: delCartError } = await supabase
           .from("Cart")
           .delete()
-          .in("id", ids);
-        if (delError) {
-          console.error("Error clearing cart after payment:", delError);
+          .eq("id", cartData.id);
+
+        if (delCartError) {
+          console.error("Error clearing cart after payment:", delCartError);
         }
+
+        console.log("Cart and cart items cleared successfully");
       } catch (e) {
-        console.error("Error in clearCart:", e);
+        console.error("Error in processSuccess:", e);
       }
     };
 
-    clearCart();
+    processSuccess();
   }, [searchParams, user?.id, location.state]);
 
   return (

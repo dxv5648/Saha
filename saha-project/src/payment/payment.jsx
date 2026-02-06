@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import supabase from "../supabase-client";
@@ -27,6 +27,7 @@ function Body() {
   const [total, setTotal] = useState(0);
   const [subtotal, setSubtotal] = useState(0);
   const [serviceCount, setServiceCount] = useState(0);
+  const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const BOOKING_FEE = 10;
@@ -40,53 +41,99 @@ function Body() {
 
       setLoading(true);
       try {
+        // Fetch Cart for the user
         const { data: cartData, error: cartError } = await supabase
           .from("Cart")
-          .select("id, cart_item_id")
-          .eq("user_id", user.id);
+          .select("id")
+          .eq("user_id", user.id)
+          .single();
 
-        if (cartError) {
+        if (cartError && cartError.code !== "PGRST116") {
           console.error("Error fetching cart:", cartError);
           setSubtotal(0);
           setServiceCount(0);
+          setCartItems([]);
           setLoading(false);
           return;
         }
 
-        if (!cartData || cartData.length === 0) {
+        if (!cartData) {
           setSubtotal(0);
           setServiceCount(0);
+          setCartItems([]);
           setLoading(false);
           return;
         }
 
-        const cartItemIds = cartData.map((cart) => cart.cart_item_id).filter(Boolean);
-
-        if (cartItemIds.length === 0) {
-          setSubtotal(0);
-          setServiceCount(0);
-          setLoading(false);
-          return;
-        }
-
+        // Fetch all Cart_Items for this cart
         const { data: cartItemsData, error: cartItemsError } = await supabase
           .from("Cart_Item")
-          .select("cost")
-          .in("id", cartItemIds);
+          .select("id, service_id, service_index, provider_id, quantity, start_time, end_time")
+          .eq("cart_id", cartData.id);
 
         if (cartItemsError) {
           console.error("Error fetching cart items:", cartItemsError);
           setSubtotal(0);
           setServiceCount(0);
-        } else if (cartItemsData) {
-          const total = cartItemsData.reduce((sum, item) => sum + (item.cost || 0), 0);
-          setSubtotal(total);
-          setServiceCount(cartItemsData.length);
+          setCartItems([]);
+          setLoading(false);
+          return;
         }
+
+        if (!cartItemsData || cartItemsData.length === 0) {
+          setSubtotal(0);
+          setServiceCount(0);
+          setCartItems([]);
+          setLoading(false);
+          return;
+        }
+
+        // Fetch Services to get prices (using service_price field)
+        const serviceIds = cartItemsData.map((item) => item.service_id).filter(Boolean);
+        let servicesMap = new Map();
+
+        if (serviceIds.length > 0) {
+          const { data: servicesData } = await supabase
+            .from("Services")
+            .select("id, service_price, provider_id")
+            .in("id", serviceIds);
+
+          if (servicesData) {
+            servicesData.forEach((s) => {
+              const prices = (s.service_price || "").split(",").map((p) => parseFloat(p.trim()) || 0);
+              servicesMap.set(s.id, { prices, provider_id: s.provider_id });
+            });
+          }
+        }
+
+        // Calculate total and transform items
+        let totalPrice = 0;
+        const transformedItems = cartItemsData.map((item) => {
+          const serviceInfo = servicesMap.get(item.service_id) || { prices: [], provider_id: null };
+          const idx = item.service_index ?? 0;
+          const price = serviceInfo.prices[idx] || 0;
+          totalPrice += price;
+
+          return {
+            cart_item_id: item.id,
+            service_id: item.service_id,
+            service_index: item.service_index,
+            provider_id: item.provider_id || serviceInfo.provider_id,
+            cost: price,
+            quantity: item.quantity || 1,
+            start_time: item.start_time,
+            end_time: item.end_time,
+          };
+        });
+
+        setSubtotal(totalPrice);
+        setServiceCount(cartItemsData.length);
+        setCartItems(transformedItems);
       } catch (error) {
         console.error("Unexpected error fetching cart totals:", error);
         setSubtotal(0);
         setServiceCount(0);
+        setCartItems([]);
       } finally {
         setLoading(false);
       }
@@ -159,7 +206,12 @@ function Body() {
                     </div>
                   </div>
 
-                  <StripeElementsWrapper total={total} user={user} />
+                  <StripeElementsWrapper 
+                    total={total} 
+                    subtotal={subtotal}
+                    user={user} 
+                    cartItems={cartItems}
+                  />
                 </div>
               )}
             </div>
@@ -186,22 +238,26 @@ const appearance = {
   },
 };
 
-// Flow: user enters payment page → backend creates PaymentIntent → returns client_secret → frontend loads Elements → user clicks Pay → confirmPayment
-function StripeElementsWrapper({ total, user }) {
+// Flow: user enters payment page → backend creates PaymentIntent + Order → returns client_secret → frontend loads Elements → user clicks Pay → confirmPayment
+function StripeElementsWrapper({ total, subtotal, user, cartItems }) {
   const [clientSecret, setClientSecret] = useState("");
+  const [orderId, setOrderId] = useState(null);
   const [intentLoading, setIntentLoading] = useState(true);
   const [intentError, setIntentError] = useState(null);
+  const createIntentCalled = useRef(false);
 
   useEffect(() => {
+    // Prevent duplicate order creation (useRef survives re-renders and Strict Mode double-invoke)
+    if (createIntentCalled.current) return;
+
     // Due to the base 10 NZD booking fee, we only create the Payment Intent when total >= 10 (i.e. total > 10 so there is at least some service amount beyond the fee).
-    if (!total || total <= 10) {
+    if (!total || total <= 10 || !cartItems || cartItems.length === 0) {
       setIntentLoading(false);
       return;
     }
 
-    let cancelled = false;
-    setIntentLoading(true);
-    setIntentError(null);
+    // Mark as called immediately to prevent any duplicate calls
+    createIntentCalled.current = true;
 
     const createIntent = async () => {
       try {
@@ -213,6 +269,10 @@ function StripeElementsWrapper({ total, user }) {
             amount: amountInCents,
             currency: "nzd",
             userId: user?.id,
+            cartItems: cartItems,
+            subtotal: subtotal,
+            tax: 0,
+            total: total,
           }),
         });
 
@@ -221,18 +281,20 @@ function StripeElementsWrapper({ total, user }) {
           throw new Error(data.error || "Failed to create payment intent");
         }
 
-        const { clientSecret: secret } = await res.json();
-        if (!cancelled && secret) setClientSecret(secret);
+        const { clientSecret: secret, orderId: newOrderId } = await res.json();
+        if (secret) setClientSecret(secret);
+        if (newOrderId) setOrderId(newOrderId);
       } catch (e) {
-        if (!cancelled) setIntentError(e.message);
+        setIntentError(e.message);
+        // Reset flag on error so user can retry
+        createIntentCalled.current = false;
       } finally {
-        if (!cancelled) setIntentLoading(false);
+        setIntentLoading(false);
       }
     };
 
     createIntent();
-    return () => { cancelled = true; };
-  }, [total, user?.id]);
+  }, [total, subtotal, user?.id, cartItems]);
 
   if (intentLoading) {
     return (
@@ -268,12 +330,12 @@ function StripeElementsWrapper({ total, user }) {
       stripe={stripePromise}
       options={{ clientSecret, appearance }}
     >
-      <CheckoutForm total={total} clientSecret={clientSecret} />
+      <CheckoutForm total={total} clientSecret={clientSecret} orderId={orderId} />
     </Elements>
   );
 }
 
-function CheckoutForm({ total, clientSecret }) {
+function CheckoutForm({ total, clientSecret, orderId }) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const stripe = useStripe();
@@ -316,25 +378,31 @@ function CheckoutForm({ total, clientSecret }) {
         return;
       }
 
-      // When confirmPayment resolves without redirect (rare): clear cart and navigate; usually Stripe redirects and payment-success clears the cart.
+      // When confirmPayment resolves without redirect (rare): clear cart and cart_items, then navigate; usually Stripe redirects and payment-success clears the cart.
       try {
         const { data: cartData, error: cartError } = await supabase
           .from("Cart")
           .select("id")
-          .eq("user_id", user.id);
+          .eq("user_id", user.id)
+          .single();
 
-        if (!cartError && cartData && cartData.length > 0) {
-          const cartIds = cartData.map((c) => c.id);
-          const { error: delErr } = await supabase
+        if (!cartError && cartData) {
+          // Delete all Cart_Items for this cart
+          await supabase
+            .from("Cart_Item")
+            .delete()
+            .eq("cart_id", cartData.id);
+
+          // Delete the Cart entry
+          await supabase
             .from("Cart")
             .delete()
-            .in("id", cartIds);
-          if (delErr) console.error("Error clearing cart:", delErr);
+            .eq("id", cartData.id);
         }
       } catch (clearErr) {
         console.error("Error clearing cart:", clearErr);
       }
-      navigate("/payment-success", { state: { fromPayment: true } });
+      navigate("/payment-success", { state: { fromPayment: true, orderId } });
     } catch (err) {
       console.error("Payment error:", err);
       setError(err.message || "Unable to process payment. Please try again.");

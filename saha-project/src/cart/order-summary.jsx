@@ -21,13 +21,14 @@ export default function OrderSummary() {
 
       setLoading(true);
       try {
-        // Fetch Cart items for the user
+        // Fetch Cart for the user
         const { data: cartData, error: cartError } = await supabase
           .from("Cart")
-          .select("id, cart_item_id")
-          .eq("user_id", user.id);
+          .select("id")
+          .eq("user_id", user.id)
+          .single();
 
-        if (cartError) {
+        if (cartError && cartError.code !== "PGRST116") {
           console.error("Error fetching cart:", cartError);
           setSubtotal(0);
           setServiceCount(0);
@@ -35,38 +36,63 @@ export default function OrderSummary() {
           return;
         }
 
-        if (!cartData || cartData.length === 0) {
+        if (!cartData) {
           setSubtotal(0);
           setServiceCount(0);
           setLoading(false);
           return;
         }
 
-        // Fetch all Cart_Item details to calculate totals
-        const cartItemIds = cartData.map((cart) => cart.cart_item_id).filter(Boolean);
-        
-        if (cartItemIds.length === 0) {
-          setSubtotal(0);
-          setServiceCount(0);
-          setLoading(false);
-          return;
-        }
-
+        // Fetch all Cart_Items for this cart
         const { data: cartItemsData, error: cartItemsError } = await supabase
           .from("Cart_Item")
-          .select("cost")
-          .in("id", cartItemIds);
+          .select("id, service_id, service_index")
+          .eq("cart_id", cartData.id);
 
         if (cartItemsError) {
           console.error("Error fetching cart items:", cartItemsError);
           setSubtotal(0);
           setServiceCount(0);
-        } else if (cartItemsData) {
-          // Calculate subtotal from all cart items
-          const total = cartItemsData.reduce((sum, item) => sum + (item.cost || 0), 0);
-          setSubtotal(total);
-          setServiceCount(cartItemsData.length);
+          setLoading(false);
+          return;
         }
+
+        if (!cartItemsData || cartItemsData.length === 0) {
+          setSubtotal(0);
+          setServiceCount(0);
+          setLoading(false);
+          return;
+        }
+
+        // Fetch Services to get prices (using service_price field)
+        const serviceIds = cartItemsData.map((item) => item.service_id).filter(Boolean);
+        let totalPrice = 0;
+
+        if (serviceIds.length > 0) {
+          const { data: servicesData } = await supabase
+            .from("Services")
+            .select("id, service_price")
+            .in("id", serviceIds);
+
+          if (servicesData) {
+            // Create a map of service_id -> array of prices
+            const priceMap = new Map();
+            servicesData.forEach((s) => {
+              const prices = (s.service_price || "").split(",").map((p) => parseFloat(p.trim()) || 0);
+              priceMap.set(s.id, prices);
+            });
+
+            totalPrice = cartItemsData.reduce((sum, item) => {
+              const prices = priceMap.get(item.service_id) || [];
+              const idx = item.service_index ?? 0;
+              const price = prices[idx] || 0;
+              return sum + price;
+            }, 0);
+          }
+        }
+
+        setSubtotal(totalPrice);
+        setServiceCount(cartItemsData.length);
       } catch (error) {
         console.error("Unexpected error fetching cart totals:", error);
         setSubtotal(0);
