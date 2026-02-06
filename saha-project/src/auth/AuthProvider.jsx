@@ -38,6 +38,7 @@ export function AuthProvider({ children }) {
     const effectiveSession = currentSession ?? session;
     if (!effectiveSession?.user) {
       setIsAdmin(false);
+      setIsAdminLoading(false);
       return { isAdmin: false };
     }
 
@@ -58,12 +59,12 @@ export function AuthProvider({ children }) {
       return { isAdmin: flag };
     } catch (e) {
       console.warn("profiles is_admin check failed:", e);
-      // Keep the previous isAdmin value on transient errors to prevent UI flicker.
-      return { isAdmin, error: e };
+      setIsAdmin(false);
+      return { isAdmin: false, error: e };
     } finally {
       setIsAdminLoading(false);
     }
-  }, [session, ensureProfileRow, isAdmin]);
+  }, [session, ensureProfileRow]);
 
   useEffect(() => {
     let isMounted = true;
@@ -114,6 +115,13 @@ export function AuthProvider({ children }) {
       (_event, newSession) => {
         setSession(newSession);
         setIsAuthReady(true);
+
+        if (!newSession?.user) {
+          // Logged out — immediately clear admin state, no async needed.
+          setIsAdmin(false);
+          return;
+        }
+
         // Update admin state as soon as auth changes (covers Google OAuth too).
         ensureProfileRow(newSession);
         refreshIsAdmin(newSession);
