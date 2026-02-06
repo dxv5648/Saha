@@ -10,10 +10,9 @@ export const useLocationAutocomplete = () => {
   const [postalCode, setPostalCode] = useState("");
   const [country, setCountry] = useState("New Zealand");
   const locationInputRef = useRef(null);
+  const debounceTimer = useRef(null);
 
-  const handleLocationChange = async (value) => {
-    setLocation(value);
-
+  const fetchLocationSuggestions = async (value) => {
     if (value.length < 3) {
       setLocationSuggestions([]);
       setShowSuggestions(false);
@@ -67,6 +66,20 @@ export const useLocationAutocomplete = () => {
     }
   };
 
+  const handleLocationChange = (value) => {
+    setLocation(value);
+
+    // Clear existing debounce timer
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+
+    // Set new debounce timer for 0.5 seconds
+    debounceTimer.current = setTimeout(() => {
+      fetchLocationSuggestions(value);
+    }, 500);
+  };
+
   const handleLocationSelect = (suggestion) => {
     const address = suggestion.address || {};
     const extractedCity = address.state || address.state_district || "";
@@ -83,7 +96,7 @@ export const useLocationAutocomplete = () => {
     setShowSuggestions(false);
   };
 
-  // Close suggestions when clicking outside
+  // Close suggestions when clicking outside and cleanup debounce timer on unmount
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -95,7 +108,12 @@ export const useLocationAutocomplete = () => {
     };
 
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
+    };
   }, []);
 
   const resetLocation = () => {

@@ -80,6 +80,61 @@ function Body() {
         if (error) {
           console.error("Error fetching services:", error);
         } else {
+          const { data: reviewsData, error: reviewsError } = await supabase
+            .from("Review")
+            .select("service_id, Stars");
+
+          const reviewsByService = new Map();
+          if (!reviewsError && Array.isArray(reviewsData)) {
+            reviewsData.forEach((review) => {
+              const serviceId = review.service_id;
+              if (!reviewsByService.has(serviceId)) {
+                reviewsByService.set(serviceId, { count: 0, sum: 0 });
+              }
+              const entry = reviewsByService.get(serviceId);
+              entry.count += 1;
+              entry.sum += Number(review.Stars) || 0;
+            });
+          }
+
+          const computeRating = (service) => {
+            if (reviewsError || !Array.isArray(reviewsData)) {
+              return {
+                rating: Number(service.rating) || 0,
+                reviews: Number(service.reviews) || 0,
+              };
+            }
+            const entry = reviewsByService.get(service.id);
+            if (!entry || entry.count === 0) {
+              return { rating: 0, reviews: 0 };
+            }
+            const avg = entry.sum / entry.count;
+            return {
+              rating: parseFloat(avg.toFixed(1)),
+              reviews: entry.count,
+            };
+          };
+
+          if (!reviewsError && Array.isArray(data)) {
+            const updatePromises = data.map((service) => {
+              const { rating, reviews } = computeRating(service);
+              const currentRating = Number(service.rating) || 0;
+              const currentReviews = Number(service.reviews) || 0;
+              if (currentRating === rating && currentReviews === reviews) {
+                return null;
+              }
+              return supabase
+                .from("Services")
+                .update({ rating, reviews })
+                .eq("id", service.id);
+            });
+
+            const pendingUpdates = updatePromises.filter(Boolean);
+            if (pendingUpdates.length > 0) {
+              await Promise.all(pendingUpdates);
+            }
+          }
+
           // Transform Supabase data to match expected format
           const transformedServices = data.map((service, index) => {
             // Calculate priceRange from service_price if available
@@ -99,13 +154,15 @@ function Body() {
               }
             }
 
+            const computed = computeRating(service);
+
             return {
               id: service.id || `supabase-${index}`,
               name: service.name,
               provider: service.provider,
               category: service.category,
-              rating: service.rating || 4.5,
-              reviews: service.reviews || 100,
+              rating: computed.rating,
+              reviews: computed.reviews,
               priceRange: priceRange,
               image_url: service.image_url,
               location: service.locations,

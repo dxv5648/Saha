@@ -45,9 +45,9 @@ export default function ServicePost() {
     const { serviceListArray, servicePriceArray } =
       serviceEntries.getServiceArrays();
 
-    // Generate random rating and reviews
-    const rating = (Math.random() * 1.0 + 4.0).toFixed(1);
-    const reviews = Math.floor(Math.random() * 251 + 50);
+    // Default rating/reviews for new services (computed from reviews later)
+    const rating = 0;
+    const reviews = 0;
 
     try {
       setIsUploading(true);
@@ -225,7 +225,9 @@ export default function ServicePost() {
                 <input
                   type="text"
                   value={locationAutocomplete.country}
-                  onChange={(e) => locationAutocomplete.setCountry(e.target.value)}
+                  onChange={(e) =>
+                    locationAutocomplete.setCountry(e.target.value)
+                  }
                   className="w-full bg-[#1C1C1CB0] text-white placeholder:text-gray-400 inter-regular rounded-[10px] border border-solid border-[#434343] outline-none focus:border-[#666] transition-colors"
                   style={{
                     fontSize: "clamp(0.75rem, 2vw, 1rem)",
@@ -250,12 +252,14 @@ export default function ServicePost() {
               </div>
               <div>
                 <label className="block mb-2 text-[#D1D1D1] text-sm inter-semi-bold">
-                  Region *
+                  Region
                 </label>
                 <input
                   type="text"
                   value={locationAutocomplete.region}
-                  onChange={(e) => locationAutocomplete.setRegion(e.target.value)}
+                  onChange={(e) =>
+                    locationAutocomplete.setRegion(e.target.value)
+                  }
                   className="w-full bg-[#1C1C1CB0] text-white placeholder:text-gray-400 inter-regular rounded-[10px] border border-solid border-[#434343] outline-none focus:border-[#666] transition-colors"
                   style={{
                     fontSize: "clamp(0.75rem, 2vw, 1rem)",
@@ -270,7 +274,9 @@ export default function ServicePost() {
                 <input
                   type="text"
                   value={locationAutocomplete.postalCode}
-                  onChange={(e) => locationAutocomplete.setPostalCode(e.target.value)}
+                  onChange={(e) =>
+                    locationAutocomplete.setPostalCode(e.target.value)
+                  }
                   className="w-full bg-[#1C1C1CB0] text-white placeholder:text-gray-400 inter-regular rounded-[10px] border border-solid border-[#434343] outline-none focus:border-[#666] transition-colors"
                   style={{
                     fontSize: "clamp(0.75rem, 2vw, 1rem)",
