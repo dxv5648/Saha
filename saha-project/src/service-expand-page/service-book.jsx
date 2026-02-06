@@ -130,54 +130,82 @@ export default function ServiceBook({ serviceList, servicePrice, serviceId, serv
     setIsSubmitting(true);
 
     try {
-      // Create service_list string from selected services
-      const serviceListString = selectedServices.map(s => s.name).join(", ");
-
-      // Calculate total cost of selected services
-      const totalCost = selectedServices.reduce((sum, service) => sum + (service.price || 0), 0);
-
-      // Insert cart item into database
-      const { data, error } = await supabase
-        .from("Cart_Item")
-        .insert([
-          {
-            service: serviceName || serviceId,
-            service_list: serviceListString,
-            date: selectedDate,
-            time: selectedTime,
-            user_id: user.id,
-            cost: totalCost,
-            service_id: serviceId,
-          },
-        ])
-        .select()
+      // Get or create the user's cart
+      let cartId;
+      const { data: existingCart, error: cartFetchError } = await supabase
+        .from("Cart")
+        .select("id")
+        .eq("user_id", user.id)
         .single();
 
-      if (error) {
-        console.error("Error adding to cart:", error);
-        alert("Error adding to cart: " + error.message);
+      if (cartFetchError && cartFetchError.code !== "PGRST116") {
+        console.error("Error fetching cart:", cartFetchError);
+        alert("Error fetching cart: " + cartFetchError.message);
         setIsSubmitting(false);
         return;
       }
 
-      // Create Cart entry with foreign key to Cart_Item
-      const { error: cartError } = await supabase
-        .from("Cart")
-        .insert([
-          {
-            cart_item_id: data.id,
-            user_id: user.id,
-          },
-        ]);
+      if (existingCart) {
+        cartId = existingCart.id;
+      } else {
+        // Create new cart for user
+        const { data: newCart, error: cartCreateError } = await supabase
+          .from("Cart")
+          .insert([{ user_id: user.id }])
+          .select()
+          .single();
 
-      if (cartError) {
-        console.error("Error creating cart entry:", cartError);
-        alert("Error creating cart entry: " + cartError.message);
+        if (cartCreateError) {
+          console.error("Error creating cart:", cartCreateError);
+          alert("Error creating cart: " + cartCreateError.message);
+          setIsSubmitting(false);
+          return;
+        }
+        cartId = newCart.id;
+      }
+
+      // Get provider_id from Services table
+      let providerId = null;
+      const { data: serviceData } = await supabase
+        .from("Services")
+        .select("provider_id")
+        .eq("id", serviceId)
+        .single();
+      
+      if (serviceData) {
+        providerId = serviceData.provider_id;
+      }
+
+      // Create start_time and end_time from date and time
+      const startDateTime = new Date(`${selectedDate}T${selectedTime}`);
+      const startTime = startDateTime.toISOString();
+      // Assume 1 hour duration per service
+      const endDateTime = new Date(startDateTime.getTime() + 60 * 60 * 1000);
+      const endTime = endDateTime.toISOString();
+
+      // Create a Cart_Item for each selected service (use index to identify which sub-service)
+      const cartItems = selectedIndexes.map((idx) => ({
+        cart_id: cartId,
+        service_id: serviceId,
+        service_index: idx,
+        provider_id: providerId,
+        quantity: 1,
+        start_time: startTime,
+        end_time: endTime,
+      }));
+
+      const { error: insertError } = await supabase
+        .from("Cart_Item")
+        .insert(cartItems);
+
+      if (insertError) {
+        console.error("Error adding to cart:", insertError);
+        alert("Error adding to cart: " + insertError.message);
         setIsSubmitting(false);
         return;
       }
 
-      alert("Service added to cart successfully!");
+      alert(`${selectedServices.length} service(s) added to cart successfully!`);
       
       // Dispatch event to refresh cart and order summary
       window.dispatchEvent(new CustomEvent("cartUpdated"));
