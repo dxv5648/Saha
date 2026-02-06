@@ -88,20 +88,27 @@ function Body() {
           return;
         }
 
-        // Fetch Services to get prices (using service_price field)
+        // Fetch Services to get prices and names (using service_price and service_list fields)
         const serviceIds = cartItemsData.map((item) => item.service_id).filter(Boolean);
         let servicesMap = new Map();
 
         if (serviceIds.length > 0) {
           const { data: servicesData } = await supabase
             .from("Services")
-            .select("id, service_price, provider_id")
+            .select("id, name, provider, service_list, service_price, provider_id")
             .in("id", serviceIds);
 
           if (servicesData) {
             servicesData.forEach((s) => {
               const prices = (s.service_price || "").split(",").map((p) => parseFloat(p.trim()) || 0);
-              servicesMap.set(s.id, { prices, provider_id: s.provider_id });
+              const names = (s.service_list || "").split(",").map((n) => n.trim()).filter(Boolean);
+              servicesMap.set(s.id, { 
+                prices, 
+                names, 
+                serviceName: s.name,
+                provider: s.provider,
+                provider_id: s.provider_id 
+              });
             });
           }
         }
@@ -109,10 +116,25 @@ function Body() {
         // Calculate total and transform items
         let totalPrice = 0;
         const transformedItems = cartItemsData.map((item) => {
-          const serviceInfo = servicesMap.get(item.service_id) || { prices: [], provider_id: null };
+          const serviceInfo = servicesMap.get(item.service_id) || { prices: [], names: [], serviceName: "Service", provider: "", provider_id: null };
           const idx = item.service_index ?? 0;
           const price = serviceInfo.prices[idx] || 0;
+          const subServiceName = serviceInfo.names[idx] || "";
           totalPrice += price;
+
+          // Format date/time
+          let dateTimeStr = "";
+          if (item.start_time) {
+            const startDate = new Date(item.start_time);
+            dateTimeStr = startDate.toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+            }) + " at " + startDate.toLocaleTimeString("en-US", {
+              hour: "numeric",
+              minute: "2-digit",
+              hour12: true,
+            });
+          }
 
           return {
             cart_item_id: item.id,
@@ -123,6 +145,11 @@ function Body() {
             quantity: item.quantity || 1,
             start_time: item.start_time,
             end_time: item.end_time,
+            // Display info
+            serviceName: serviceInfo.serviceName,
+            subServiceName: subServiceName,
+            provider: serviceInfo.provider,
+            dateTime: dateTimeStr,
           };
         });
 
@@ -182,7 +209,39 @@ function Body() {
                     <h2 className="text-white text-2xl inter-semi-bold mb-6">
                       Order Summary
                     </h2>
-                    <div className="space-y-4 mb-6">
+                    
+                    {/* Cart Items List */}
+                    <div className="space-y-3 mb-6">
+                      {cartItems.map((item, index) => (
+                        <div 
+                          key={item.cart_item_id || index}
+                          className="bg-[#1C1C1C] rounded-[12px] p-4 border border-[#333]"
+                        >
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <div className="text-white text-sm font-medium">
+                                {item.subServiceName || item.serviceName}
+                              </div>
+                              <div className="text-[#A0A0A0] text-xs mt-1">
+                                {item.serviceName}{item.provider ? ` - ${item.provider}` : ""}
+                              </div>
+                              {item.dateTime && (
+                                <div className="text-[#888] text-xs mt-1">
+                                  {item.dateTime}
+                                </div>
+                              )}
+                            </div>
+                            <div className="text-white text-sm font-medium">
+                              ${item.cost.toFixed(2)}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="bg-[#353535] h-px mb-4"></div>
+                    
+                    <div className="space-y-3 mb-6">
                       <div className="flex justify-between items-center">
                         <span className="text-[#D1D1D1] text-sm">
                           Subtotal ({serviceCount}{" "}
