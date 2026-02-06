@@ -8,6 +8,9 @@ import Profile from "./profile-page/profile.jsx";
 import Service from "./service-page/service.jsx";
 import ServiceExpand from "./service-expand-page/service-expand.jsx";
 import Cart from "./cart/cart.jsx";
+import AdminRoute from "./admin/AdminRoute.jsx";
+import AdminModeration from "./admin/AdminModeration.jsx";
+import AdminUsers from "./admin/AdminUsers.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -20,6 +23,22 @@ createRoot(document.getElementById("root")).render(
           <Route path="/service/:serviceId" element={<ServiceExpand />} />
           <Route path="/Service-Expand" element={<ServiceExpand />} />
           <Route path="/Cart" element={<Cart />} />
+          <Route
+            path="/admin"
+            element={
+              <AdminRoute>
+                <AdminModeration />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/users"
+            element={
+              <AdminRoute>
+                <AdminUsers />
+              </AdminRoute>
+            }
+          />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

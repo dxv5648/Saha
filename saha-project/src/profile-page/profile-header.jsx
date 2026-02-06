@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../auth/AuthProvider";
+import { useAuth } from "../auth/useAuth.js";
 import supabase from "../supabase-client";
 import Face from "../assets/Face.jpg";
 
@@ -14,6 +14,18 @@ export default function ProfileHeader() {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const [selectedFile, setSelectedFile] = useState(null);
+
+  const userEmail = user?.email || "";
+
+  // Seed defaults from auth metadata (useful for Google OAuth).
+  useEffect(() => {
+    if (!user) return;
+    const meta = user.user_metadata || {};
+    const fallbackName = meta.full_name || meta.name || meta.user_name || null;
+    const fallbackAvatar = meta.avatar_url || meta.picture || null;
+    if (fallbackName) setName(String(fallbackName));
+    if (fallbackAvatar) setProfileImage(String(fallbackAvatar));
+  }, [user]);
 
   // Load profile data from database on mount
   useEffect(() => {
@@ -33,7 +45,7 @@ export default function ProfileHeader() {
         }
 
         if (data) {
-          setName(data.name || "John Williams");
+          setName(data.name || name || "John Williams");
           setLocation(data.location || "Auckland, New Zealand");
           if (data.profile_image_url) {
             setProfileImage(data.profile_image_url);
@@ -228,6 +240,15 @@ export default function ProfileHeader() {
             Member • {location}
           </span>
         )}
+
+        {userEmail ? (
+          <span
+            className="text-[#BABABA] mb-6 text-center inter-regular"
+            style={{ fontSize: "clamp(0.7rem, 1.2vw, 0.85rem)" }}
+          >
+            {userEmail}
+          </span>
+        ) : null}
 
         <div
           className="flex flex-col sm:flex-row items-center w-full justify-center"

@@ -1,11 +1,69 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useEffect, useMemo, useState } from "react";
 import supabase from "../supabase-client";
 
+// Admin is stored in the DB (Option B): `profiles.is_admin`.
+// RLS should ensure users can only read their own profile row.
+
 const AuthContext = createContext(null);
+export { AuthContext };
 
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdminLoading, setIsAdminLoading] = useState(false);
+
+  const ensureProfileRow = useCallback(
+    async (currentSession) => {
+      const effectiveSession = currentSession ?? session;
+      const userId = effectiveSession?.user?.id;
+      if (!userId) return;
+
+      try {
+        // Create the profile row if it doesn't exist yet.
+        // RLS policy "Profiles: insert own" allows this.
+        const { error } = await supabase
+          .from("profiles")
+          .upsert({ id: userId }, { onConflict: "id" });
+        if (error) throw error;
+      } catch (e) {
+        // Not fatal; admin check will just resolve to false.
+        console.warn("profiles bootstrap failed:", e);
+      }
+    },
+    [session],
+  );
+
+  const refreshIsAdmin = useCallback(async (currentSession) => {
+    const effectiveSession = currentSession ?? session;
+    if (!effectiveSession?.user) {
+      setIsAdmin(false);
+      return { isAdmin: false };
+    }
+
+    try {
+      setIsAdminLoading(true);
+      await ensureProfileRow(effectiveSession);
+      const userId = effectiveSession.user.id;
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("is_admin")
+        .eq("id", userId)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      const flag = Boolean(data?.is_admin);
+      setIsAdmin(flag);
+      return { isAdmin: flag };
+    } catch (e) {
+      console.warn("profiles is_admin check failed:", e);
+      // Keep the previous isAdmin value on transient errors to prevent UI flicker.
+      return { isAdmin, error: e };
+    } finally {
+      setIsAdminLoading(false);
+    }
+  }, [session, ensureProfileRow, isAdmin]);
 
   useEffect(() => {
     let isMounted = true;
@@ -41,6 +99,9 @@ export function AuthProvider({ children }) {
         }
         setSession(data?.session ?? null);
         setIsAuthReady(true);
+
+        // Prime admin state once when we finish initializing.
+        if (data?.session) refreshIsAdmin(data.session);
       } catch (err) {
         if (!isMounted) return;
         console.error("AuthProvider init exception:", err);
@@ -53,6 +114,9 @@ export function AuthProvider({ children }) {
       (_event, newSession) => {
         setSession(newSession);
         setIsAuthReady(true);
+        // Update admin state as soon as auth changes (covers Google OAuth too).
+        ensureProfileRow(newSession);
+        refreshIsAdmin(newSession);
       },
     );
 
@@ -60,13 +124,16 @@ export function AuthProvider({ children }) {
       isMounted = false;
       subscription?.subscription?.unsubscribe?.();
     };
-  }, []);
+  }, [refreshIsAdmin, ensureProfileRow]);
 
   const value = useMemo(() => {
     const user = session?.user ?? null;
     return {
       session,
       user,
+      isAdmin,
+      isAdminLoading,
+      refreshIsAdmin,
       isAuthReady,
       signInWithPassword: async ({ email, password }) => {
         return await supabase.auth.signInWithPassword({ email, password });
@@ -90,20 +157,13 @@ export function AuthProvider({ children }) {
           : undefined);
       },
       signOut: async () => {
+        setIsAdmin(false);
         return await supabase.auth.signOut();
       },
     };
-  }, [session, isAuthReady]);
+  }, [session, isAuthReady, isAdmin, isAdminLoading, refreshIsAdmin]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) {
-    throw new Error("useAuth must be used within <AuthProvider />");
-  }
-  return ctx;
 }
 
 

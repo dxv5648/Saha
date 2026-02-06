@@ -1,12 +1,12 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { useAuth } from "../auth/AuthProvider.jsx";
+import { useAuth } from "../auth/useAuth.js";
 import LoginModal from "../auth/LoginModal.jsx";
 
 export default function Header() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
 
   const handleScrollTo = (sectionId) => {
@@ -46,6 +46,14 @@ export default function Header() {
           </button>
         </Link>
         <div className="flex gap-8 items-center">
+          {isAdmin && (
+            <Link
+              to="/admin"
+              className="text-gray-300 hover:text-white transition-colors duration-200 hover:underline underline-offset-4 font-medium"
+            >
+              <button>Admin</button>
+            </Link>
+          )}
           {user ? (
             <Link
               to="/Profile"

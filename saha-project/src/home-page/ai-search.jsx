@@ -95,10 +95,12 @@ export default function About() {
       setResults(null);
     } catch (err) {
       console.error("Error searching with AI:", err);
-      setError(
-        err.message ||
-          "Failed to search. Please check your API key and try again.",
-      );
+      const raw = err?.message || "";
+      // Hide raw network errors from users
+      const friendly = raw.toLowerCase().includes("failed to fetch")
+        ? "Network error – please check your internet connection and try again."
+        : raw || "Failed to search. Please try again.";
+      setError(friendly);
     } finally {
       setIsLoading(false);
     }

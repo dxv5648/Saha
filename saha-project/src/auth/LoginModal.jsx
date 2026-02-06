@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useAuth } from "./AuthProvider";
+import { useAuth } from "./useAuth.js";
 
 function cx(...classes) {
   return classes.filter(Boolean).join(" ");

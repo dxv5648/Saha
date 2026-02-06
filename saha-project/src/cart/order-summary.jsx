@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "../auth/AuthProvider";
+import { useAuth } from "../auth/useAuth.js";
 import supabase from "../supabase-client";
 
 export default function OrderSummary() {

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useAuth } from "../auth/AuthProvider";
+import { useAuth } from "../auth/useAuth.js";
 import supabase from "../supabase-client";
 
 export default function ServiceBook({ serviceList, servicePrice, serviceId, serviceName }) {

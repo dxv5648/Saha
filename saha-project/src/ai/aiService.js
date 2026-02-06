@@ -2,65 +2,42 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import supabase from "../supabase-client";
 import { SYSTEM_PROMPT, getQueryPrompt } from "./prompts.js";
 
+const SPAM_SYSTEM_PROMPT = `You are a content moderation assistant for a services marketplace.
+
+Your job is to determine if a service listing submission is spam, scam, or low-quality, or if it looks like a genuine service.
+
+Return ONLY valid JSON.
+
+Flag as spam for:
+- Cryptocurrency / investment / "get rich quick" schemes
+- Adult content
+- Hate/harassment
+- Phishing, requesting passwords, suspicious links
+- Obvious nonsense / keyword stuffing
+- Repeated emojis or repeated characters
+- Unreasonably generic "call me" with no service detail
+
+Allow:
+- Normal local trade services (plumbing, electrical, cleaning, etc.)
+
+JSON format:
+{
+  "verdict": "ok" | "spam",
+  "confidence": 0-1,
+  "reasons": ["short bullet reason", "..."]
+}`;
+
 // Initialize Gemini AI
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
 
-let cachedModelName = null;
+// Use env override or default to gemini-2.0-flash (widely available, fast, no
+// "thinking" overhead). No runtime model-discovery needed — one less network
+// request that can fail with CORS / auth issues in the browser.
+const GEMINI_MODEL =
+  (import.meta.env.VITE_GEMINI_MODEL || "gemini-2.0-flash").replace(/^models\//, "");
 
-async function listAvailableModelNames() {
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-  if (!apiKey) return [];
-  try {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(
-        apiKey,
-      )}`,
-    );
-    if (!res.ok) return [];
-    const json = await res.json();
-    const models = Array.isArray(json?.models) ? json.models : [];
-    // Keep only models that support generateContent
-    return models
-      .filter((m) => Array.isArray(m?.supportedGenerationMethods))
-      .filter((m) => m.supportedGenerationMethods.includes("generateContent"))
-      .map((m) => m.name) // e.g. "models/gemini-1.5-flash"
-      .filter(Boolean);
-  } catch {
-    return [];
-  }
-}
-
-async function resolveGeminiModelName() {
-  if (cachedModelName) return cachedModelName;
-
-  // Allow override (either "gemini-1.5-flash" or "models/gemini-1.5-flash")
-  const override = import.meta.env.VITE_GEMINI_MODEL;
-  if (override) {
-    cachedModelName = override.startsWith("models/") ? override : `models/${override}`;
-    return cachedModelName;
-  }
-
-  // Try live discovery first (works best for free-tier differences)
-  const available = await listAvailableModelNames();
-  if (available.length > 0) {
-    // Prefer flash-style models for speed, then fall back to any supported model.
-    const preferred =
-      available.find((m) => m.includes("flash")) ||
-      available.find((m) => m.includes("pro")) ||
-      available[0];
-    cachedModelName = preferred;
-    return cachedModelName;
-  }
-
-  // Fallback guesses (in case listModels is blocked)
-  const fallbacks = [
-    "models/gemini-1.5-flash",
-    "models/gemini-1.5-pro",
-    "models/gemini-1.0-pro",
-    "models/gemini-pro",
-  ];
-  cachedModelName = fallbacks[0];
-  return cachedModelName;
+function resolveGeminiModelName() {
+  return GEMINI_MODEL;
 }
 
 /**
@@ -70,7 +47,7 @@ async function fetchAllServices() {
   try {
     const { data, error } = await supabase
       .from("Services")
-      .select("*")
+      .select("*, locations(*)")
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -96,7 +73,15 @@ async function processQueryWithAI(userQuery, services) {
       name: service.name,
       provider: service.provider,
       category: service.category,
-      location: service.location || service.city || service.suburb || service.address || "",
+      location:
+        service?.locations?.name ||
+        service?.locations?.city ||
+        service?.locations?.region ||
+        service.location ||
+        service.city ||
+        service.suburb ||
+        service.address ||
+        "",
       description: service.description || "",
       service_list: service.service_list || "",
       service_price: service.service_price || "",
@@ -112,8 +97,8 @@ async function processQueryWithAI(userQuery, services) {
     const queryPrompt = getQueryPrompt(userQuery, servicesForAI);
     const fullPrompt = `${SYSTEM_PROMPT}\n\n${queryPrompt}`;
 
-    // Generate response
-    const result = await model.generateContent(fullPrompt);
+  // Generate response
+  const result = await model.generateContent(fullPrompt);
     const response = await result.response;
     const text = response.text();
 
@@ -136,7 +121,20 @@ async function processQueryWithAI(userQuery, services) {
       throw new Error("Could not parse AI response");
     }
   } catch (error) {
-    console.error("Error in processQueryWithAI:", error);
+    // The GoogleGenerativeAI SDK often surfaces network issues as a generic
+    // "Failed to fetch" error. Add context so it's debuggable.
+    const apiKeyPresent = Boolean(import.meta.env.VITE_GEMINI_API_KEY);
+
+    console.error("Error in processQueryWithAI:", {
+      message: error?.message,
+      name: error?.name,
+      model: GEMINI_MODEL,
+      apiKeyPresent,
+      cause: error?.cause,
+      stack: error?.stack,
+    });
+
+    // Re-throw so the caller (searchWithAI) can handle graceful degradation.
     throw error;
   }
 }
@@ -157,15 +155,22 @@ export async function searchWithAI(userQuery, options = {}) {
   }
 
   try {
-    // Check if Gemini API key is configured
-    if (!import.meta.env.VITE_GEMINI_API_KEY) {
-      throw new Error(
-        "Gemini API key not configured. Please add VITE_GEMINI_API_KEY to your .env file"
-      );
-    }
+    // If Gemini isn't configured, we can still provide value by falling back
+    // to local keyword matching against the Supabase services list.
+    const geminiConfigured = Boolean(import.meta.env.VITE_GEMINI_API_KEY);
 
     // Fetch all services from Supabase
-    const allServices = await fetchAllServices();
+    let allServices = [];
+    try {
+      allServices = await fetchAllServices();
+    } catch (fetchErr) {
+      console.error("Failed to fetch services from Supabase:", fetchErr);
+      return {
+        type: "suggestions",
+        services: [],
+        reasoning: "Could not reach the services database. Please try again shortly.",
+      };
+    }
 
     if (allServices.length === 0) {
       return {
@@ -175,8 +180,18 @@ export async function searchWithAI(userQuery, options = {}) {
       };
     }
 
-    // Process query with AI
-    const aiResponse = await processQueryWithAI(userQuery, allServices);
+    // Process query with AI (optional)
+    let aiResponse = { type: "suggestions", serviceIds: [] };
+    if (geminiConfigured) {
+      try {
+        aiResponse = await processQueryWithAI(userQuery, allServices);
+      } catch (aiErr) {
+        // Graceful degradation: still return something useful (local fuzzy match)
+        // so the app keeps working during demos and when API is down.
+        console.warn("AI search unavailable, falling back to local match:", aiErr);
+        aiResponse = { type: "suggestions", serviceIds: [] };
+      }
+    }
 
     // Extract relevant services based on AI response (backend uses IDs).
     const relevantServiceIds = Array.isArray(aiResponse.serviceIds)
@@ -203,6 +218,17 @@ export async function searchWithAI(userQuery, options = {}) {
         .slice(0, 10);
     }
 
+    // Keep a standard return shape expected by the UI (computed early so we can
+    // safely fall back if the AI call failed or returned something unexpected).
+    const resolvedType =
+      aiResponse?.type === "comparison" ? "comparison" : "suggestions";
+    const baseReasoning =
+      relevantServiceIds.length > 0
+        ? aiResponse?.reasoning || "Here are the best matches for your request."
+        : "AI search is unavailable right now, so these are the closest keyword matches.";
+
+    // NOTE: location filtering is applied below (existing code continues).
+
     // If location info was provided, apply location filtering / ranking
   const { coords, radiusKm = 50, areaText, filters = {} } = options || {};
   const locationText = filters.locationText || areaText;
@@ -214,6 +240,10 @@ export async function searchWithAI(userQuery, options = {}) {
   const serviceText = filters.serviceText || "";
 
     function hasCoords(s) {
+      // Prefer coords from joined locations table
+      if (s?.locations?.latitude !== undefined && s?.locations?.longitude !== undefined) {
+        return true;
+      }
       return (
         (s.latitude !== undefined && s.longitude !== undefined) ||
         (s.lat !== undefined && s.lng !== undefined) ||
@@ -222,6 +252,12 @@ export async function searchWithAI(userQuery, options = {}) {
     }
 
     function getCoords(s) {
+      if (s?.locations?.latitude !== undefined && s?.locations?.longitude !== undefined) {
+        return {
+          lat: parseFloat(s.locations.latitude),
+          lng: parseFloat(s.locations.longitude),
+        };
+      }
       if (s.latitude !== undefined && s.longitude !== undefined) return { lat: parseFloat(s.latitude), lng: parseFloat(s.longitude) };
       if (s.lat !== undefined && s.lng !== undefined) return { lat: parseFloat(s.lat), lng: parseFloat(s.lng) };
       if (s.lat !== undefined && s.lon !== undefined) return { lat: parseFloat(s.lat), lng: parseFloat(s.lon) };
@@ -266,19 +302,43 @@ export async function searchWithAI(userQuery, options = {}) {
       // Prefer services within radius; if none, allow some outside but rank them lower.
       relevantServices = [...within, ...withoutCoords, ...outside];
     } else if (locationText && typeof locationText === "string") {
-      const qArea = locationText.toLowerCase();
-      // Try a simple substring match on common location fields if present
-      relevantServices = relevantServices.filter((s) => {
-        return (
-          (s.location || "").toLowerCase().includes(qArea) ||
-          (s.city || "").toLowerCase().includes(qArea) ||
-          (s.suburb || "").toLowerCase().includes(qArea) ||
-          (s.postcode || "").toString().includes(qArea) ||
-          (s.address || "").toLowerCase().includes(qArea)
-        );
-      });
-      // If this filters out everything, fall back to original list
-      if (relevantServices.length === 0) relevantServices = allServices.slice(0, 10);
+      // Support common user input like: "Henderson, Auckland"
+      // We split on commas and require ALL tokens to match somewhere in the service's location fields.
+      const tokens = locationText
+        .split(",")
+        .map((t) => t.trim().toLowerCase())
+        .filter(Boolean);
+
+      const matchesLocationTokens = (s) => {
+        const loc = s.locations || {};
+        const haystack = [
+          loc.name,
+          loc.city,
+          loc.region,
+          loc.country,
+          loc.postal_code,
+          s.location,
+          s.city,
+          s.suburb,
+          s.address,
+          s.postcode,
+        ]
+          .map((v) => (v === null || v === undefined ? "" : String(v)))
+          .join(" ")
+          .toLowerCase();
+
+        return tokens.every((tok) => haystack.includes(tok));
+      };
+
+      const before = relevantServices;
+      relevantServices = relevantServices.filter(matchesLocationTokens);
+
+      // IMPORTANT: don't fall back to unrelated services when the user explicitly
+      // applies a location filter. If nothing matches, return zero results and
+      // let the UI show "No services found".
+      if (relevantServices.length === 0) {
+        relevantServices = [];
+      }
     }
 
     const normalizedCategory = category ? category.toLowerCase() : "";
@@ -333,36 +393,39 @@ export async function searchWithAI(userQuery, options = {}) {
       });
     }
 
-    // Rank services by a simple heuristic: rating, reviews and price (lower is better).
-    // This is a light-weight in-backend ranking so that search results present multiple good options.
-    const maxReviews = Math.max(...relevantServices.map((s) => s.reviews || 0), 1);
+    if (relevantServices.length > 0) {
+      // Rank services by a simple heuristic: rating, reviews and price (lower is better).
+      // This is a light-weight in-backend ranking so that search results present multiple good options.
+      const maxReviews = Math.max(...relevantServices.map((s) => s.reviews || 0), 1);
 
-    relevantServices = relevantServices
-      .map((s) => {
-        const rating = parseFloat(s.rating) || 0;
-        const reviews = parseInt(s.reviews) || 0;
-        const price = avgPrice(s);
-        // Normalize components
-        const ratingScore = rating / 5; // 0..1
-        const reviewsScore = Math.log(reviews + 1) / Math.log(maxReviews + 1 || 2); // 0..1
-        let priceScore = 0.5; // neutral
-        if (price !== null) {
-          // cheaper is better: map price to 0..1 where lower price => higher score
-          // to avoid extremes, clamp
-          const clamped = Math.max(20, Math.min(price, 500));
-          priceScore = 1 - (clamped - 20) / (500 - 20);
-        }
-        const composite = ratingScore * 0.6 + reviewsScore * 0.25 + priceScore * 0.15;
-        return { service: s, score: composite };
-      })
-      .sort((a, b) => b.score - a.score)
-      .map((p) => p.service)
-      .slice(0, 5); // limit to top 5 recommendations
+      relevantServices = relevantServices
+        .map((s) => {
+          const rating = parseFloat(s.rating) || 0;
+          const reviews = parseInt(s.reviews) || 0;
+          const price = avgPrice(s);
+          // Normalize components
+          const ratingScore = rating / 5; // 0..1
+          const reviewsScore = Math.log(reviews + 1) / Math.log(maxReviews + 1 || 2); // 0..1
+          let priceScore = 0.5; // neutral
+          if (price !== null) {
+            // cheaper is better: map price to 0..1 where lower price => higher score
+            // to avoid extremes, clamp
+            const clamped = Math.max(20, Math.min(price, 500));
+            priceScore = 1 - (clamped - 20) / (500 - 20);
+          }
+          const composite = ratingScore * 0.6 + reviewsScore * 0.25 + priceScore * 0.15;
+          return { service: s, score: composite };
+        })
+        .sort((a, b) => b.score - a.score)
+        .map((p) => p.service)
+        .slice(0, 5); // limit to top 5 recommendations
+    }
 
-    // Post-process AI reasoning to avoid leaking numeric IDs: replace occurrences like "Service ID 5" with the service name
-    let reasoning = aiResponse.reasoning || "";
+    // Post-process reasoning to avoid leaking numeric IDs: replace occurrences like
+    // "Service ID 5" with the service name.
+    let finalReasoning = baseReasoning;
     try {
-      reasoning = reasoning.replace(/Service\s*ID\s*(\d+)/gi, (match, idStr) => {
+      finalReasoning = finalReasoning.replace(/Service\s*ID\s*(\d+)/gi, (match, idStr) => {
         const idNum = parseInt(idStr, 10);
         const svc = allServices.find((s) => s.id === idNum);
         return svc ? svc.name : match;
@@ -371,14 +434,108 @@ export async function searchWithAI(userQuery, options = {}) {
       // ignore replacement errors
     }
 
+    // Build a human-readable summary of all active filters so the reasoning
+    // explains *why* the results were narrowed down.
+    const appliedFilters = [];
+    if (coords) {
+      appliedFilters.push(`your current location (within ${radiusKm} km)`);
+    }
+    if (locationText) {
+      appliedFilters.push(`location: "${locationText}"`);
+    }
+    if (normalizedCategory) {
+      appliedFilters.push(`category: "${category}"`);
+    }
+    if (normalizedServiceText) {
+      appliedFilters.push(`service keyword: "${serviceText}"`);
+    }
+    if (minRating) {
+      appliedFilters.push(`minimum rating: ${minRating}★`);
+    }
+    if (minReviews) {
+      appliedFilters.push(`minimum reviews: ${minReviews}`);
+    }
+    if (priceMin !== null && priceMax !== null) {
+      appliedFilters.push(`price range: $${priceMin}–$${priceMax}`);
+    } else if (priceMin !== null) {
+      appliedFilters.push(`minimum price: $${priceMin}`);
+    } else if (priceMax !== null) {
+      appliedFilters.push(`maximum price: $${priceMax}`);
+    }
+
+    if (appliedFilters.length > 0) {
+      const filterSummary = appliedFilters.join(", ");
+      if (relevantServices.length > 0) {
+        finalReasoning += ` Results were filtered by ${filterSummary}.`;
+      } else {
+        finalReasoning = `No services matched your filters (${filterSummary}). Try broadening your search or clearing some filters.`;
+      }
+    } else if (relevantServices.length === 0) {
+      finalReasoning = "No services matched your search. Try different keywords or clearing your filters.";
+    }
+
     return {
-      type: aiResponse.type || "suggestions",
+      type: resolvedType,
       services: relevantServices,
-      reasoning: reasoning,
+      reasoning: finalReasoning,
     };
   } catch (error) {
     console.error("Error in searchWithAI:", error);
-    throw error;
+    // Never let a network/runtime error bubble up – always return a usable result.
+    return {
+      type: "suggestions",
+      services: [],
+      reasoning: "Something went wrong while searching. Please try again.",
+    };
+  }
+}
+
+/**
+ * AI spam check for service submissions.
+ * @param {{name:string, provider:string, category:string, description:string, locationText?:string, services?:Array<{service_list?:string, service_price?:string}>}} input
+ * @returns {Promise<{verdict:"ok"|"spam", confidence:number, reasons:string[]}>}
+ */
+export async function checkServicePostForSpam(input) {
+  if (!import.meta.env.VITE_GEMINI_API_KEY) {
+    // If AI isn't configured, fail open (don't block posting)
+    return { verdict: "ok", confidence: 0, reasons: ["AI not configured"] };
+  }
+
+  const modelName = await resolveGeminiModelName();
+  const model = genAI.getGenerativeModel({ model: modelName });
+
+  const prompt = `${SPAM_SYSTEM_PROMPT}\n\nSubmission:\n${JSON.stringify(
+    {
+      name: input?.name || "",
+      provider: input?.provider || "",
+      category: input?.category || "",
+      description: input?.description || "",
+      locationText: input?.locationText || "",
+      services: Array.isArray(input?.services) ? input.services : [],
+    },
+    null,
+    2,
+  )}`;
+
+  const result = await model.generateContent(prompt);
+  const response = await result.response;
+  let text = response.text().trim();
+  text = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+
+  try {
+    const parsed = JSON.parse(text);
+    const verdict = parsed?.verdict === "spam" ? "spam" : "ok";
+    const confidenceRaw = Number(parsed?.confidence);
+    const confidence = Number.isFinite(confidenceRaw)
+      ? Math.max(0, Math.min(1, confidenceRaw))
+      : 0.5;
+    const reasons = Array.isArray(parsed?.reasons)
+      ? parsed.reasons.map(String).filter(Boolean).slice(0, 5)
+      : [];
+    return { verdict, confidence, reasons };
+  } catch {
+    // If AI returns something unexpected, fail open but record a reason.
+    return { verdict: "ok", confidence: 0.25, reasons: ["AI parse fallback"] };
   }
 }
 

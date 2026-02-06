@@ -34,7 +34,7 @@ export default function ReviewForm({ onSubmit, serviceId }) {
 
     try {
       // Insert review into database
-      const { data, error } = await supabase
+          const { error } = await supabase
         .from("Review")
         .insert([
           {

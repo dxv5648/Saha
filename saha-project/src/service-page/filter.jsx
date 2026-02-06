@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-export default function filter({
+export default function Filter({
   searchQuery = "",
   onSearchChange = () => {},
   selectedCategory = "All Categories",

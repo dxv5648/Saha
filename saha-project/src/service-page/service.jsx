@@ -28,7 +28,6 @@ function Body() {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState("Featured");
   const [supabaseServices, setSupabaseServices] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [isCompareMode, setIsCompareMode] = useState(false);
   const [selectedServices, setSelectedServices] = useState([]);
   const [showCompareModal, setShowCompareModal] = useState(false);
@@ -115,8 +114,6 @@ function Body() {
         }
       } catch (error) {
         console.error("Error fetching services:", error);
-      } finally {
-        setLoading(false);
       }
     };
 

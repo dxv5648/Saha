@@ -10,7 +10,6 @@ import ImageUploadField from "./ImageUploadField";
 import ServiceEntriesSection from "./ServiceEntriesSection";
 
 export default function ServicePost() {
-  const [serviceName, setServiceName] = useState([]);
   const [name, setName] = useState("");
   const [provider, setProvider] = useState("");
   const [category, setCategory] = useState("");
@@ -45,63 +44,76 @@ export default function ServicePost() {
     const { serviceListArray, servicePriceArray } =
       serviceEntries.getServiceArrays();
 
-    // Generate random rating and reviews
-    const rating = (Math.random() * 1.0 + 4.0).toFixed(1);
-    const reviews = Math.floor(Math.random() * 251 + 50);
-
     try {
       setIsUploading(true);
 
       // Upload image
       const imageUrl = await imageUpload.uploadImage();
 
-      // Create location record
-      const locationData = {
-        name: locationAutocomplete.location.trim(),
-        city: locationAutocomplete.city.trim(),
-        region: locationAutocomplete.region.trim(),
-        postal_code: locationAutocomplete.postalCode.trim() || null,
-        latitude: 0,
-        longitude: 0,
-        country: locationAutocomplete.country.trim(),
-        country_code: "NZ",
-      };
+      // Ensure a matching locations row exists and get its id.
+      // (If you already have a stricter schema/unique constraint, we can switch
+      // this to an upsert. For now, we do a simple lookup then insert.)
+      const locName = locationAutocomplete.location.trim();
+      const locCity = locationAutocomplete.city.trim();
+      const locRegion = locationAutocomplete.region.trim();
+      const locCountry = locationAutocomplete.country.trim();
 
-      const { data: locationRecord, error: locationError } = await supabase
-        .from("locations")
-        .insert([locationData])
-        .select()
-        .single();
+      let locationId = null;
+      {
+        const { data: existingLoc, error: findErr } = await supabase
+          .from("locations")
+          .select("id")
+          .eq("name", locName)
+          .eq("city", locCity)
+          .eq("region", locRegion)
+          .eq("country", locCountry)
+          .maybeSingle();
+        if (findErr) throw findErr;
 
-      if (locationError) {
-        throw new Error("Error creating location: " + locationError.message);
+        if (existingLoc?.id) {
+          locationId = existingLoc.id;
+        } else {
+          const { data: createdLoc, error: createErr } = await supabase
+            .from("locations")
+            .insert({
+              name: locName,
+              city: locCity,
+              region: locRegion,
+              postal_code: locationAutocomplete.postalCode.trim() || null,
+              latitude: 0,
+              longitude: 0,
+              country: locCountry,
+              country_code: "NZ",
+            })
+            .select("id")
+            .single();
+          if (createErr) throw createErr;
+          locationId = createdLoc?.id ?? null;
+        }
       }
 
-      // Create service record
-      const newServiceData = {
-        name: name.trim(),
-        provider: provider.trim(),
-        category: category,
-        description: description.trim(),
-        location_id: locationRecord.id,
-        service_list: serviceListArray.join(","),
-        service_price: servicePriceArray.join(","),
-        image_url: imageUrl,
-        rating: parseFloat(rating),
-        reviews: reviews,
-      };
-
-      const { data, error } = await supabase
-        .from("Services")
-        .insert([newServiceData])
-        .single();
+      // Submit for approval (DB-backed moderation queue)
+      // NOTE: This bypasses Edge Functions. Admin status is stored in `profiles.is_admin`.
+      const { error } = await supabase
+        .from("service_submissions")
+        .insert({
+          name: name.trim(),
+          provider: provider.trim(),
+          category,
+          description: description.trim(),
+          location_id: locationId,
+          service_list: serviceListArray.join(","),
+          service_price: servicePriceArray.join(","),
+          image_url: imageUrl,
+          status: "pending",
+        })
+  .select("*")
+  .single();
 
       if (error) {
         console.error(error);
-        alert("Error adding service: " + error.message);
+        alert("Error submitting service for approval: " + error.message);
       } else {
-        setServiceName((prev) => [...prev, data]);
-
         // Reset all fields
         setName("");
         setProvider("");
@@ -111,7 +123,9 @@ export default function ServicePost() {
         imageUpload.resetImage();
         serviceEntries.resetServices();
 
-        alert("Service added successfully!");
+        alert(
+          "Submitted! An admin will review your service before it appears on the website.",
+        );
       }
     } catch (err) {
       console.error("Error adding service:", err);
