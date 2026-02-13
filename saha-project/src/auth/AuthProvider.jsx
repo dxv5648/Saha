@@ -1,4 +1,4 @@
-import { createContext, useCallback, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import supabase from "../supabase-client";
 
 // Admin is stored in the DB (Option B): `profiles.is_admin`.
@@ -7,64 +7,71 @@ import supabase from "../supabase-client";
 const AuthContext = createContext(null);
 export { AuthContext };
 
+// ── Standalone helpers (no React state, no dependency arrays) ──────────
+// These are pure async functions so they never cause effect re-registration.
+
+async function ensureProfileRow(userId) {
+  if (!userId) return;
+  try {
+    const { error } = await supabase
+      .from("profiles")
+      .upsert({ id: userId }, { onConflict: "id" });
+    if (error) throw error;
+  } catch (e) {
+    console.warn("profiles bootstrap failed:", e);
+  }
+}
+
+async function fetchIsAdmin(userId) {
+  if (!userId) return false;
+  try {
+    await ensureProfileRow(userId);
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("is_admin")
+      .eq("id", userId)
+      .maybeSingle();
+    if (error) throw error;
+    return Boolean(data?.is_admin);
+  } catch (e) {
+    console.warn("profiles is_admin check failed:", e);
+    return false;
+  }
+}
+
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isAdminLoading, setIsAdminLoading] = useState(false);
 
-  const ensureProfileRow = useCallback(
-    async (currentSession) => {
-      const effectiveSession = currentSession ?? session;
-      const userId = effectiveSession?.user?.id;
-      if (!userId) return;
+  // Track the latest userId we're checking so we can ignore stale responses.
+  const adminCheckRef = useRef(0);
 
-      try {
-        // Create the profile row if it doesn't exist yet.
-        // RLS policy "Profiles: insert own" allows this.
-        const { error } = await supabase
-          .from("profiles")
-          .upsert({ id: userId }, { onConflict: "id" });
-        if (error) throw error;
-      } catch (e) {
-        // Not fatal; admin check will just resolve to false.
-        console.warn("profiles bootstrap failed:", e);
-      }
-    },
-    [session],
-  );
-
+  // refreshIsAdmin accepts an explicit session so callers don't rely on stale
+  // closure over the `session` state variable. It is intentionally dependency-
+  // free so it never triggers effect re-registration.
   const refreshIsAdmin = useCallback(async (currentSession) => {
-    const effectiveSession = currentSession ?? session;
-    if (!effectiveSession?.user) {
+    const userId = currentSession?.user?.id;
+    if (!userId) {
       setIsAdmin(false);
       setIsAdminLoading(false);
       return { isAdmin: false };
     }
 
-    try {
-      setIsAdminLoading(true);
-      await ensureProfileRow(effectiveSession);
-      const userId = effectiveSession.user.id;
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("is_admin")
-        .eq("id", userId)
-        .maybeSingle();
+    // Bump a counter so concurrent calls don't clobber each other.
+    const checkId = ++adminCheckRef.current;
+    setIsAdminLoading(true);
 
-      if (error) throw error;
+    const flag = await fetchIsAdmin(userId);
 
-      const flag = Boolean(data?.is_admin);
+    // Only commit state if this is still the most recent check.
+    if (checkId === adminCheckRef.current) {
       setIsAdmin(flag);
-      return { isAdmin: flag };
-    } catch (e) {
-      console.warn("profiles is_admin check failed:", e);
-      setIsAdmin(false);
-      return { isAdmin: false, error: e };
-    } finally {
       setIsAdminLoading(false);
     }
-  }, [session, ensureProfileRow]);
+    return { isAdmin: flag };
+  }, []); // ← stable: no deps
 
   useEffect(() => {
     let isMounted = true;
@@ -95,14 +102,17 @@ export function AuthProvider({ children }) {
         const { data, error } = await supabase.auth.getSession();
         if (!isMounted) return;
         if (error) {
-          // If this fails we still want the app to render; treat as logged out.
           console.error("supabase.auth.getSession error:", error);
         }
-        setSession(data?.session ?? null);
+
+        const initialSession = data?.session ?? null;
+        setSession(initialSession);
         setIsAuthReady(true);
 
         // Prime admin state once when we finish initializing.
-        if (data?.session) refreshIsAdmin(data.session);
+        if (initialSession) {
+          refreshIsAdmin(initialSession);
+        }
       } catch (err) {
         if (!isMounted) return;
         console.error("AuthProvider init exception:", err);
@@ -113,17 +123,19 @@ export function AuthProvider({ children }) {
 
     const { data: subscription } = supabase.auth.onAuthStateChange(
       (_event, newSession) => {
+        if (!isMounted) return;
+
         setSession(newSession);
         setIsAuthReady(true);
 
         if (!newSession?.user) {
           // Logged out — immediately clear admin state, no async needed.
           setIsAdmin(false);
+          setIsAdminLoading(false);
           return;
         }
 
         // Update admin state as soon as auth changes (covers Google OAuth too).
-        ensureProfileRow(newSession);
         refreshIsAdmin(newSession);
       },
     );
@@ -132,7 +144,7 @@ export function AuthProvider({ children }) {
       isMounted = false;
       subscription?.subscription?.unsubscribe?.();
     };
-  }, [refreshIsAdmin, ensureProfileRow]);
+  }, [refreshIsAdmin]); // refreshIsAdmin is stable (no deps), so this effect runs once
 
   const value = useMemo(() => {
     const user = session?.user ?? null;
@@ -165,7 +177,11 @@ export function AuthProvider({ children }) {
           : undefined);
       },
       signOut: async () => {
+        // Clear admin state synchronously first so the UI never shows an
+        // admin tab for a logged-out user, even for a single frame.
         setIsAdmin(false);
+        setIsAdminLoading(false);
+        setSession(null);
         return await supabase.auth.signOut();
       },
     };
