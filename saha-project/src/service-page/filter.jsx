@@ -82,18 +82,25 @@ export default function Filter({
             }}
           >
             <div className="flex flex-1 inter-regular items-center bg-[#1f1f1f] rounded-[25px]  w-full">
-              <img
-                src={
-                  "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/L7hCOf5rCg/9lidi5l2_expires_30_days.png"
-                }
-                className="object-fill shrink-0"
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-gray-400 shrink-0"
                 style={{
                   width: "clamp(18px, 2vw, 23px)",
                   height: "clamp(17px, 2vw, 22px)",
                   marginLeft: "clamp(15px, 2vw, 20px)",
                   marginRight: "clamp(6px, 1vw, 8px)",
                 }}
-              />
+              >
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
               <input
                 placeholder={"Search for plumbers, electricians..."}
                 value={searchQuery}
@@ -118,16 +125,22 @@ export default function Filter({
                 <span className="text-white whitespace-nowrap">
                   {selectedCategory}
                 </span>
-                <img
-                  src={
-                    "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/L7hCOf5rCg/2fqviavt_expires_30_days.png"
-                  }
-                  className="object-fill shrink-0"
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-white shrink-0"
                   style={{
                     width: "clamp(20px, 2.5vw, 25px)",
                     height: "clamp(14px, 1.7vw, 17px)",
                   }}
-                />
+                >
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
               </button>
               {showCategories && (
                 <div className="absolute top-full left-0 right-0 lg:left-0 mt-2 bg-[#0F0F0F]  rounded-[15px] z-50 max-h-64 overflow-y-auto">
@@ -164,16 +177,22 @@ export default function Filter({
                 <span className="text-white whitespace-nowrap">
                   {`Sort By: ${sortBy}`}
                 </span>
-                <img
-                  src={
-                    "https://storage.googleapis.com/tagjs-prod.appspot.com/v1/L7hCOf5rCg/fnh78bg4_expires_30_days.png"
-                  }
-                  className="object-fill shrink-0"
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-white shrink-0"
                   style={{
                     width: "clamp(20px, 2.5vw, 25px)",
                     height: "clamp(14px, 1.7vw, 17px)",
                   }}
-                />
+                >
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
               </button>
               {showSort && (
                 <div className="absolute top-full left-0 right-0 lg:left-0 mt-2 bg-[#0F0F0F]  rounded-[15px] z-50 max-h-64 overflow-y-auto">

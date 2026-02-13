@@ -6,7 +6,7 @@ import LoginModal from "../auth/LoginModal.jsx";
 export default function Header() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, isAdminLoading, isAuthReady } = useAuth();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
 
   const handleScrollTo = (sectionId) => {
@@ -46,7 +46,7 @@ export default function Header() {
           </button>
         </Link>
         <div className="flex gap-8 items-center">
-          {isAdmin && (
+          {isAuthReady && !isAdminLoading && isAdmin && (
             <Link
               to="/admin"
               className="text-gray-300 hover:text-white transition-colors duration-200 hover:underline underline-offset-4 font-medium"
@@ -54,7 +54,7 @@ export default function Header() {
               <button>Admin</button>
             </Link>
           )}
-          {user ? (
+          {!isAuthReady ? null : user ? (
             <Link
               to="/Profile"
               className="text-gray-300 hover:text-white transition-colors duration-200 hover:underline underline-offset-4 font-medium"
