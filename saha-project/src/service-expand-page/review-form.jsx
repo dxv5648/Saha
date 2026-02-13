@@ -54,6 +54,26 @@ export default function ReviewForm({ onSubmit, serviceId }) {
         return;
       }
 
+      const { data: reviewsData, error: reviewsError } = await supabase
+        .from("Review")
+        .select("Stars")
+        .eq("service_id", serviceId);
+
+      if (!reviewsError && Array.isArray(reviewsData)) {
+        const reviewsCount = reviewsData.length;
+        const totalStars = reviewsData.reduce(
+          (sum, review) => sum + (Number(review.Stars) || 0),
+          0,
+        );
+        const averageRating = reviewsCount > 0 ? totalStars / reviewsCount : 0;
+        const ratingValue = parseFloat(averageRating.toFixed(1));
+
+        await supabase
+          .from("Services")
+          .update({ rating: ratingValue, reviews: reviewsCount })
+          .eq("id", serviceId);
+      }
+
       // Create review object for local state update
       const newReview = {
         author: formData.author,

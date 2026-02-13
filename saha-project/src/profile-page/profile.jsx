@@ -3,6 +3,7 @@ import Footer from "../home-page/footer.jsx";
 import Header from "../home-page/header.jsx";
 import ProfileHeader from "./profile-header.jsx";
 import RecentServices from "./recent-services.jsx";
+import MyBookings from "./my-bookings.jsx";
 import FavouriteServices from "./favourite-services.jsx";
 import PaymentMethods from "./payment-method.jsx";
 import PersonalDetails from "./Personal-Details.jsx";
@@ -79,7 +80,7 @@ function Body() {
         {activeTab === "bookings" && (
           <div className="flex justify-center px-4 pb-12">
             <div className="w-full max-w-4xl">
-              <RecentServices />
+              <MyBookings />
             </div>
           </div>
         )}

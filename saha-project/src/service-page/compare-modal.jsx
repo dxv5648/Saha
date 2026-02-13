@@ -170,7 +170,7 @@ export default function CompareModal({ services = [], onClose = () => {} }) {
                             fontSize: "clamp(0.875rem, 1.5vw, 1rem)",
                           }}
                         >
-                          {service.rating}/5
+                          {service.rating > 0 ? `${service.rating}/5` : "N/A"}
                         </span>
                       </div>
                     </div>

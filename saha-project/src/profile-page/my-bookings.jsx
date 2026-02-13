@@ -1,53 +1,59 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../auth/useAuth.js";
+import { useAuth } from "../auth/AuthProvider";
 import supabase from "../supabase-client";
 import WorkImage from "../assets/Work-imgae.png";
 
-export default function RecentServices() {
-  const [recentBookings, setRecentBookings] = useState([]);
+const BOOKINGS_PER_PAGE = 3;
+
+export default function MyBookings() {
+  const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
   const [selectedBooking, setSelectedBooking] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchRecentBookings = async () => {
+    const fetchBookings = async () => {
       if (!user) {
         setLoading(false);
         return;
       }
 
       try {
-        // Fetch recent 2 bookings from Bookings table with order details
+        console.log("Fetching bookings for user:", user.id);
+        
+        // Fetch bookings for the user with order details
         const { data: bookingsData, error: bookingsError } = await supabase
           .from("Bookings")
-          .select("id, service_id, start_time, end_time, status, order_id, order_item_id")
+          .select("id, service_id, provider_id, start_time, end_time, status, created_at, customer_id, order_id, order_item_id")
           .eq("customer_id", user.id)
-          .order("created_at", { ascending: false })
-          .limit(2);
+          .order("created_at", { ascending: false });
+
+        console.log("Bookings query result:", { bookingsData, bookingsError });
 
         if (bookingsError) {
           console.error("Error fetching bookings:", bookingsError);
-          setRecentBookings([]);
+          setBookings([]);
           setLoading(false);
           return;
         }
 
         if (!bookingsData || bookingsData.length === 0) {
-          setRecentBookings([]);
+          setBookings([]);
           setLoading(false);
           return;
         }
 
         // Fetch Services data for details
         const serviceIds = bookingsData.map((b) => b.service_id).filter(Boolean);
-
         let servicesMap = new Map();
         if (serviceIds.length > 0) {
           const { data: servicesData } = await supabase
             .from("Services")
-            .select("id, name, provider, image_url, service_list, service_price")
+            .select("id, name, provider, image_url, service_list, service_price, description")
             .in("id", serviceIds);
 
           if (servicesData) {
@@ -75,7 +81,7 @@ export default function RecentServices() {
         if (orderIds.length > 0) {
           const { data: ordersData } = await supabase
             .from("Orders")
-            .select("id, status, total, created_at")
+            .select("id, status, total, created_at, payment_intent_id")
             .in("id", orderIds);
 
           if (ordersData) {
@@ -84,7 +90,7 @@ export default function RecentServices() {
         }
 
         // Transform data
-        const bookings = bookingsData.map((booking) => {
+        const transformedBookings = bookingsData.map((booking) => {
           const service = booking.service_id
             ? servicesMap.get(booking.service_id)
             : null;
@@ -106,9 +112,9 @@ export default function RecentServices() {
           }
 
           // Format date and time
+          let dateTimeStr = "";
           let dateStr = "";
           let timeStr = "";
-          let dateTimeStr = "";
           if (booking.start_time) {
             const startDate = new Date(booking.start_time);
             dateStr = startDate.toLocaleDateString("en-US", {
@@ -159,11 +165,12 @@ export default function RecentServices() {
             id: booking.id,
             title: service ? service.name : "Service",
             subServiceName: subServiceName,
-            provider: service ? service.provider : "Unknown",
+            provider: service ? service.provider : "Provider",
+            description: service?.description || "",
+            dateTime: dateTimeStr,
             date: dateStr,
             time: timeStr,
             endTime: endTimeStr,
-            dateTime: dateTimeStr,
             status: booking.status || "booked",
             statusColor: statusColors[booking.status] || statusColors.booked,
             image: service?.image_url || WorkImage,
@@ -175,16 +182,16 @@ export default function RecentServices() {
           };
         });
 
-        setRecentBookings(bookings);
+        setBookings(transformedBookings);
       } catch (error) {
         console.error("Unexpected error fetching bookings:", error);
-        setRecentBookings([]);
+        setBookings([]);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchRecentBookings();
+    fetchBookings();
   }, [user]);
 
   const handleViewDetails = (booking) => {
@@ -205,64 +212,122 @@ export default function RecentServices() {
           className="text-white mb-5 inter-semi-bold"
           style={{ fontSize: "clamp(1rem, 2vw, 1.125rem)" }}
         >
-          {"Recent Bookings"}
+          My Bookings
         </span>
         {loading ? (
           <div className="text-center py-8 w-full">
             <span className="text-[#D1D1D1] text-sm">Loading...</span>
           </div>
-        ) : recentBookings.length > 0 ? (
-          <div className="w-full">
-            {recentBookings.map((booking) => (
-              <div
-                key={booking.id}
-                className="flex items-center bg-[#1C1C1CB0] w-full mb-4 rounded-[20px] border border-solid border-[#434343] overflow-hidden"
-                style={{
-                  gap: "clamp(8px, 1.5vw, 11px)",
-                  padding: "clamp(8px, 1.5vw, 12px)",
-                }}
-              >
-                <img
-                  src={booking.image}
-                  alt={booking.title}
-                  className="w-16 h-16 object-cover rounded-[10px] flex-shrink-0"
-                  onError={(e) => { e.target.onerror = null; e.target.src = WorkImage; }}
-                />
-                <div className="flex flex-col items-start grow inter-regular">
-                  <span
-                    className="text-white mb-1"
-                    style={{ fontSize: "clamp(0.75rem, 1.5vw, 0.875rem)" }}
-                  >
-                    {booking.title}
-                  </span>
-                  <span
-                    className="text-[#D1D1D1] mb-2 text-xs"
-                    style={{ fontSize: "clamp(0.65rem, 1.2vw, 0.75rem)" }}
-                  >
-                    {booking.date}
-                  </span>
-                  <button
-                    className="bg-[#434343] text-white rounded-[10px] border-0 cursor-pointer hover:bg-[#555] transition-colors"
-                    style={{
-                      fontSize: "clamp(0.7rem, 1.3vw, 0.8rem)",
-                      padding:
-                        "clamp(4px, 0.8vw, 6px) clamp(10px, 1.5vw, 14px)",
-                    }}
-                    onClick={() => handleViewDetails(booking)}
-                  >
-                    {"View Details"}
-                  </button>
+        ) : bookings.length > 0 ? (
+          <>
+            <div className="w-full space-y-4">
+              {bookings
+                .slice((currentPage - 1) * BOOKINGS_PER_PAGE, currentPage * BOOKINGS_PER_PAGE)
+                .map((booking) => (
+                <div
+                  key={booking.id}
+                  className="flex items-center bg-[#1C1C1CB0] w-full rounded-[20px] border border-solid border-[#434343] overflow-hidden"
+                  style={{
+                    gap: "clamp(12px, 2vw, 16px)",
+                    padding: "clamp(12px, 2vw, 16px)",
+                  }}
+                >
+                  <img
+                    src={booking.image}
+                    alt={booking.title}
+                    className="w-20 h-20 object-cover rounded-[12px] flex-shrink-0"
+                  />
+                  <div className="flex flex-col items-start grow inter-regular">
+                    <div className="flex items-center gap-3 mb-1">
+                      <span
+                        className="text-white font-medium"
+                        style={{ fontSize: "clamp(0.875rem, 1.5vw, 1rem)" }}
+                      >
+                        {booking.title}
+                      </span>
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-xs font-medium ${booking.statusColor}`}
+                      >
+                        {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                      </span>
+                    </div>
+                    <span
+                      className="text-[#A0A0A0] mb-1"
+                      style={{ fontSize: "clamp(0.75rem, 1.3vw, 0.875rem)" }}
+                    >
+                      {booking.provider}
+                    </span>
+                    <span
+                      className="text-[#D1D1D1] mb-3"
+                      style={{ fontSize: "clamp(0.7rem, 1.2vw, 0.8rem)" }}
+                    >
+                      {booking.dateTime || "Date not set"}
+                    </span>
+                    <button
+                      className="bg-white text-black rounded-[10px] border-0 cursor-pointer hover:bg-gray-200 transition-colors font-medium"
+                      style={{
+                        fontSize: "clamp(0.75rem, 1.3vw, 0.85rem)",
+                        padding: "clamp(6px, 1vw, 8px) clamp(14px, 2vw, 18px)",
+                      }}
+                      onClick={() => handleViewDetails(booking)}
+                    >
+                      View Details
+                    </button>
+                  </div>
                 </div>
+              ))}
+            </div>
+            
+            {/* Pagination */}
+            {bookings.length > BOOKINGS_PER_PAGE && (
+              <div className="flex items-center justify-center gap-2 mt-6 w-full">
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1.5 rounded-lg bg-[#2C2C2C] text-white text-sm disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#3C3C3C] transition"
+                >
+                  Prev
+                </button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.ceil(bookings.length / BOOKINGS_PER_PAGE) }, (_, i) => (
+                    <button
+                      key={i + 1}
+                      onClick={() => setCurrentPage(i + 1)}
+                      className={`w-8 h-8 rounded-lg text-sm font-medium transition ${
+                        currentPage === i + 1
+                          ? "bg-white text-black"
+                          : "bg-[#2C2C2C] text-white hover:bg-[#3C3C3C]"
+                      }`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, Math.ceil(bookings.length / BOOKINGS_PER_PAGE)))}
+                  disabled={currentPage === Math.ceil(bookings.length / BOOKINGS_PER_PAGE)}
+                  className="px-3 py-1.5 rounded-lg bg-[#2C2C2C] text-white text-sm disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#3C3C3C] transition"
+                >
+                  Next
+                </button>
               </div>
-            ))}
-          </div>
+            )}
+          </>
         ) : (
-          <span
-            className="text-[#D1D1D1] text-center inter-regular w-full"
-            style={{ fontSize: "clamp(0.75rem, 1.5vw, 0.875rem)" }}
-          >
-            {"No recent bookings to display"}
-          </span>
+          <div className="text-center py-12 w-full">
+            <span
+              className="text-[#D1D1D1] inter-regular block mb-4"
+              style={{ fontSize: "clamp(0.875rem, 1.5vw, 1rem)" }}
+            >
+              No bookings yet
+            </span>
+            <button
+              onClick={() => navigate("/service")}
+              className="bg-white text-black px-6 py-3 rounded-[10px] font-medium hover:bg-gray-200 transition"
+            >
+              Browse Services
+            </button>
+          </div>
         )}
       </div>
 

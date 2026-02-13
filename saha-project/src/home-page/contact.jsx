@@ -1,22 +1,45 @@
 import { useState } from "react";
 
 export default function Contact() {
-  const [name, setName] = useState("");
+  const [subject, setSubject] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
+  const [isSending, setIsSending] = useState(false);
 
-  const handleSubmit = () => {
-    if (!name || !email || !message) {
+  const apiBase = import.meta.env.VITE_API_URL || "http://localhost:3001";
+
+  const handleSubmit = async () => {
+    if (!subject || !email || !message) {
       alert("Please fill in all fields");
       return;
     }
-    alert(
-      `Message sent!\n\nName: ${name}\nEmail: ${email}\nMessage: ${message}`
-    );
-    // Reset form
-    setName("");
-    setEmail("");
-    setMessage("");
+    try {
+      setIsSending(true);
+      const response = await fetch(`${apiBase}/api/contact`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ subject, email, message }),
+      });
+
+      const result = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to send message.");
+      }
+
+      alert("Message sent!");
+      // Reset form
+      setSubject("");
+      setEmail("");
+      setMessage("");
+    } catch (error) {
+      console.error("Contact form error:", error);
+      alert(error.message || "Failed to send message.");
+    } finally {
+      setIsSending(false);
+    }
   };
 
   return (
@@ -55,16 +78,10 @@ export default function Contact() {
                 </span>
                 <div className="text-gray-300 inter-regular">
                   <a
-                    href="mailto:hello@saha.nz"
+                    href="mailto:business@saha.co.nz"
                     className="hover:text-white transition-colors block"
                   >
-                    hello@saha.nz
-                  </a>
-                  <a
-                    href="mailto:support@saha.nz"
-                    className="hover:text-white transition-colors block"
-                  >
-                    support@saha.nz
+                    business@saha.co.nz
                   </a>
                 </div>
               </div>
@@ -96,9 +113,9 @@ export default function Contact() {
           <div className="flex flex-col w-full gap-6">
             <input
               type="text"
-              placeholder="Name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              placeholder="Subject"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
               className="w-full inter-regular text-white placeholder:text-gray-400 bg-[#0f0f0f] text-lg py-4 px-4 rounded-xl border border-gray-600 focus:border-white focus:outline-none transition-colors"
             />
 
@@ -120,9 +137,10 @@ export default function Contact() {
 
             <button
               onClick={handleSubmit}
+              disabled={isSending}
               className="w-full inter-semi-bold bg-white hover:bg-gray-100 text-black text-xl font-semibold py-4 rounded-xl transition-colors active:scale-95 transform"
             >
-              Send Message
+              {isSending ? "Sending..." : "Send Message"}
             </button>
           </div>
         </div>

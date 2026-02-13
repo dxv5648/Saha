@@ -16,43 +16,32 @@ export default function CartItems() {
       }
 
       try {
-        // First, fetch Cart items for the user
+        // First, fetch Cart for the user
         const { data: cartData, error: cartError } = await supabase
           .from("Cart")
-          .select("id, cart_item_id")
+          .select("id")
           .eq("user_id", user.id)
-          .order("created_at", { ascending: false });
+          .single();
 
-        if (cartError) {
+        if (cartError && cartError.code !== "PGRST116") {
           console.error("Error fetching cart:", cartError);
           setCartItems([]);
           setLoading(false);
           return;
         }
 
-        if (!cartData || cartData.length === 0) {
+        if (!cartData) {
           setCartItems([]);
           setLoading(false);
           return;
         }
 
-        // Fetch all Cart_Item details
-        const cartItemIds = cartData
-          .map((cart) => cart.cart_item_id)
-          .filter(Boolean);
-
-        // If no cart item IDs, set empty cart
-        if (cartItemIds.length === 0) {
-          setCartItems([]);
-          setLoading(false);
-          return;
-        }
-
-        // Fetch Cart_Item details without Services join first
+        // Fetch all Cart_Items for this cart
         const { data: cartItemsData, error: cartItemsError } = await supabase
           .from("Cart_Item")
-          .select("id, service, service_list, date, time, cost, service_id")
-          .in("id", cartItemIds);
+          .select("id, service_id, service_index, provider_id, quantity, start_time, end_time")
+          .eq("cart_id", cartData.id)
+          .order("created_at", { ascending: false });
 
         if (cartItemsError) {
           console.error("Error fetching cart items:", cartItemsError);
@@ -61,15 +50,19 @@ export default function CartItems() {
           return;
         }
 
-        // Fetch Services separately if we have service_ids
-        const serviceIds =
-          cartItemsData?.map((item) => item.service_id).filter(Boolean) || [];
+        if (!cartItemsData || cartItemsData.length === 0) {
+          setCartItems([]);
+          setLoading(false);
+          return;
+        }
 
+        // Fetch Services data (with service_list and service_price for sub-service lookup)
+        const serviceIds = cartItemsData.map((item) => item.service_id).filter(Boolean);
         let servicesMap = new Map();
         if (serviceIds.length > 0) {
           const { data: servicesData } = await supabase
             .from("Services")
-            .select("id, provider, image_url")
+            .select("id, name, provider, image_url, service_list, service_price")
             .in("id", serviceIds);
 
           if (servicesData) {
@@ -77,68 +70,65 @@ export default function CartItems() {
           }
         }
 
-        // Create a map of cart_item_id -> cart_item data with Services merged
-        const cartItemMap = new Map();
-        if (cartItemsData) {
-          cartItemsData.forEach((item) => {
-            cartItemMap.set(item.id, {
-              ...item,
-              Services: item.service_id
-                ? servicesMap.get(item.service_id)
-                : null,
-            });
-          });
-        }
-
         // Transform data to match UI format
-        const transformedItems = cartData
-          .filter((cart) => cartItemMap.has(cart.cart_item_id))
-          .map((cart) => {
-            const cartItem = cartItemMap.get(cart.cart_item_id);
-            const service = cartItem?.Services;
+        const transformedItems = cartItemsData.map((item) => {
+          const service = item.service_id ? servicesMap.get(item.service_id) : null;
 
-            // Format date and time
-            const date = cartItem.date
-              ? new Date(cartItem.date).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                  year:
-                    cartItem.date.split("-")[0] !==
-                    new Date().getFullYear().toString()
-                      ? "numeric"
-                      : undefined,
-                })
-              : "";
+          // Format date and time from start_time
+          let dateTimeStr = "";
+          if (item.start_time) {
+            const startDate = new Date(item.start_time);
+            const date = startDate.toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            });
+            const time = startDate.toLocaleTimeString("en-US", {
+              hour: "numeric",
+              minute: "2-digit",
+              hour12: true,
+            });
+            dateTimeStr = `${date}, ${time}`;
+          }
 
-            // Format time (convert 24h to 12h)
-            let timeFormatted = "";
-            if (cartItem.time) {
-              const [hours, minutes] = cartItem.time.split(":");
-              const hour24 = parseInt(hours);
-              const hour12 =
-                hour24 > 12 ? hour24 - 12 : hour24 === 0 ? 12 : hour24;
-              const ampm = hour24 >= 12 ? "PM" : "AM";
-              timeFormatted = `${hour12}:${minutes} ${ampm}`;
+          // Parse service_list and service_price to get sub-service name and price
+          let subServiceName = "";
+          let price = 0;
+          if (service && item.service_index !== null && item.service_index !== undefined) {
+            const names = (service.service_list || "").split(",").map((s) => s.trim()).filter(Boolean);
+            const prices = (service.service_price || "").split(",").map((p) => p.trim()).filter(Boolean);
+            
+            if (names[item.service_index]) {
+              subServiceName = names[item.service_index];
             }
+            if (prices[item.service_index]) {
+              price = parseFloat(prices[item.service_index]) || 0;
+            }
+          }
 
-            return {
-              id: cart.id,
-              cartItemId: cartItem.id,
-              title: service
-                ? `${cartItem.service || "Service"}: ${service.provider}`
-                : cartItem.service || "Service",
-              serviceList: cartItem.service_list || "",
-              time:
-                date && timeFormatted
-                  ? `${date}, ${timeFormatted}`
-                  : date || timeFormatted || "",
-              cost: `$${cartItem.cost ? cartItem.cost.toFixed(2) : "0.00"}`,
-              image: service?.image_url || WorkImage,
-              serviceId: cartItem.service_id,
-              date: cartItem.date,
-              timeValue: cartItem.time,
-            };
-          });
+          // Build title: "SubService - MainService: Provider" or fallback
+          let title = "Service";
+          if (service) {
+            if (subServiceName) {
+              title = `${subServiceName} - ${service.name}: ${service.provider}`;
+            } else {
+              title = `${service.name}: ${service.provider}`;
+            }
+          }
+
+          return {
+            id: item.id,
+            cartItemId: item.id,
+            cartId: cartData.id,
+            title: title,
+            serviceList: subServiceName,
+            time: dateTimeStr,
+            cost: `$${price.toFixed(2)}`,
+            costValue: price,
+            image: service?.image_url || WorkImage,
+            serviceId: item.service_id,
+          };
+        });
         setCartItems(transformedItems);
 
         // Dispatch event to refresh order summary
@@ -154,44 +144,26 @@ export default function CartItems() {
     fetchCartItems();
   }, [user]);
 
-  const handleRemove = async (cartId) => {
+  const handleRemove = async (cartItemId) => {
     if (!confirm("Are you sure you want to remove this item from your cart?")) {
       return;
     }
 
     try {
-      // Find the cart item to get the cartItemId
-      const cartItem = cartItems.find((item) => item.id === cartId);
-      const cartItemId = cartItem?.cartItemId;
-
-      // Delete the Cart entry
-      const { error: cartError } = await supabase
-        .from("Cart")
+      // Delete the Cart_Item entry
+      const { error: cartItemError } = await supabase
+        .from("Cart_Item")
         .delete()
-        .eq("id", cartId);
+        .eq("id", cartItemId);
 
-      if (cartError) {
-        console.error("Error removing cart entry:", cartError);
-        alert("Error removing item: " + cartError.message);
+      if (cartItemError) {
+        console.error("Error removing cart item:", cartItemError);
+        alert("Error removing item: " + cartItemError.message);
         return;
       }
 
-      // Delete the corresponding Cart_Item entry
-      if (cartItemId) {
-        const { error: cartItemError } = await supabase
-          .from("Cart_Item")
-          .delete()
-          .eq("id", cartItemId);
-
-        if (cartItemError) {
-          console.error("Error removing cart item entry:", cartItemError);
-          alert("Error removing cart item: " + cartItemError.message);
-          return;
-        }
-      }
-
       // Remove from local state
-      setCartItems((prev) => prev.filter((item) => item.id !== cartId));
+      setCartItems((prev) => prev.filter((item) => item.id !== cartItemId));
 
       // Dispatch event to refresh order summary
       window.dispatchEvent(new CustomEvent("cartUpdated"));

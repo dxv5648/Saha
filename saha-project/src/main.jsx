@@ -11,6 +11,8 @@ import Cart from "./cart/cart.jsx";
 import AdminRoute from "./admin/AdminRoute.jsx";
 import AdminModeration from "./admin/AdminModeration.jsx";
 import AdminUsers from "./admin/AdminUsers.jsx";
+import Payment from "./payment/payment.jsx";
+import PaymentSuccess from "./payment/payment-success.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -39,6 +41,8 @@ createRoot(document.getElementById("root")).render(
               </AdminRoute>
             }
           />
+          <Route path="/payment" element={<Payment />} />
+          <Route path="/payment-success" element={<PaymentSuccess />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
