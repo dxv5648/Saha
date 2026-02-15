@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../auth/AuthProvider";
+import { useAuth } from "../auth/useAuth.js";
 import supabase from "../supabase-client";
 import WorkImage from "../assets/Work-imgae.png";
 

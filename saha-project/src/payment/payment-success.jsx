@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
-import { useAuth } from "../auth/AuthProvider";
+import { useAuth } from "../auth/useAuth.js";
 import supabase from "../supabase-client";
 import Footer from "../home-page/footer.jsx";
 import Header from "../home-page/header.jsx";
