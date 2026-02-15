@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../auth/useAuth.js";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../auth/AuthProvider";
 import supabase from "../supabase-client";
 
 export default function OrderSummary() {
